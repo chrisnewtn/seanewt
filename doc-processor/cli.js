@@ -1,9 +1,68 @@
 import fs from "node:fs/promises";
+import {createReadStream, createWriteStream} from "node:fs";
+import {pipeline} from "node:stream/promises";
+import {parseArgs} from "node:util";
 import {processDocument} from "./index.js";
+import {fileURLToPath} from "node:url";
+import path from 'node:path';
 
-const [pathToFile] = process.argv.slice(2);
-const fileContents = await fs.readFile(pathToFile, "utf8");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const file = await processDocument(pathToFile, fileContents);
+const {
+  values: {
+    'input-dir': inputDir,
+    'output-dir': outputDir
+  }
+} = parseArgs({
+  options: {
+    'input-dir': {
+      type: 'string',
+      short: 'i',
+      default: path.resolve(__dirname, '..', '..', 'docs-raw')
+    },
+    'output-dir': {
+      type: 'string',
+      short: 'o',
+      default: path.resolve(__dirname, '..', '..', 'docs')
+    }
+  }
+});
 
-await fs.writeFile(pathToFile, String(file), "utf8");
+const writtenAssets = new Set();
+
+for (const inputFile of await fs.readdir(inputDir, {withFileTypes: true})) {
+  if (inputFile.isDirectory() || !inputFile.name.endsWith(".html")) {
+    break;
+  }
+  const pathToInput = path.join(inputDir, inputFile.name);
+  const fileContents = await fs.readFile(pathToInput, "utf8");
+
+  const {vFile, assets} = await processDocument({
+    inputFile: {
+      name: pathToInput,
+      text: fileContents
+    },
+    outputDir
+  });
+
+  for (const [pathToNewAsset, pathToOldAsset] of assets) {
+    if (writtenAssets.has(pathToNewAsset)) {
+      break;
+    }
+
+    await pipeline(
+      createReadStream(pathToOldAsset),
+      createWriteStream(pathToNewAsset)
+    );
+
+    console.log('write', pathToNewAsset);
+
+    writtenAssets.add(pathToNewAsset);
+  }
+
+  const pathToOutput = path.join(outputDir, inputFile.name);
+
+  await fs.writeFile(pathToOutput, String(vFile), "utf8");
+
+  console.log('write', pathToOutput);
+}

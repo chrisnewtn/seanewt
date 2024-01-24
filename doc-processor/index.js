@@ -22,29 +22,40 @@ async function shasum(pathToFile) {
 }
 
 /**
- * Appends the sha256sum of all each local CSS file to their `href` property
- * using a query parameter.
+ * Renames each locally referenced CSS file with a 7 character short hash of its
+ * contents. This renders it permanently cachable, as any changes to its content
+ * will result in a different hash causing it to be re-downloaded.
  * @type {import('unified').Plugin<[], import('hast').Root>}
  */
-function cacheBustCss({pathToFile}) {
+function cacheBustCss({
+  pathToFile,
+  outputDir,
+  assets
+}) {
   const pathToDir = path.dirname(pathToFile);
 
   return async tree => {
     for (const el of selectAll("link[rel=stylesheet]", tree)) {
       const href = el.properties.href;
 
-      if (href.startsWith("http:")) {
+      if (href.startsWith("http")) {
+        // It's an external asset. Ignore it.
         break;
       }
 
       const [pathPart, searchString] = href.split("?");
+      const pathToAsset = path.resolve(pathToDir, pathPart);
 
-      const hash = await shasum(path.resolve(pathToDir, pathPart));
+      const hash = await shasum(pathToAsset);
 
-      const searchParams = new URLSearchParams(searchString);
-      searchParams.set("sha256", hash);
+      const extname = path.extname(pathPart);
+      const basename = path.basename(pathPart, extname);
 
-      el.properties.href = `${pathPart}?${searchParams}`;
+      const newName = `${basename}-${hash.substring(0, 7)}${extname}`;
+
+      assets.set(path.join(outputDir, newName), pathToAsset);
+
+      el.properties.href = `${newName}${searchString ? `?${searchString}` : ''}`;
     }
   };
 }
@@ -54,12 +65,21 @@ function cacheBustCss({pathToFile}) {
  * @param {string} pathToFile
  * @param {string} fileContents
  */
-export async function processDocument(pathToFile, fileContents) {
-  return await unified()
+export async function processDocument({
+  inputFile,
+  outputDir
+}) {
+  const assets = new Map();
+
+  const vFile = await unified()
     .use(rehypeParse, {
       fragment: false
     })
-    .use(cacheBustCss, {pathToFile})
+    .use(cacheBustCss, {
+      pathToFile: inputFile.name,
+      outputDir,
+      assets
+    })
     .use(rehypeFormat, {
       indentInitial: false,
     })
@@ -70,5 +90,10 @@ export async function processDocument(pathToFile, fileContents) {
         useNamedReferences: true
       }
     })
-    .process(fileContents);
+    .process(inputFile.text);
+
+  return {
+    vFile,
+    assets
+  };
 }
