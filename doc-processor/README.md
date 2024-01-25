@@ -2,13 +2,12 @@
 
 _Why add content to your website, when you can spend an afternoon doing this instead!_
 
-For now, this applies basic formatting to a given HTML file, and also cache-busts its css. Later though, if the site
-expands to multiple pages, it'll likely do more.
+This primarily exists to ensure that assets are permanently cachable in a way that's revokable.
 
 ### Usage
 
-To format a given file in-situ, run the following:
+To process all the HTML files in a directory and output them to a different one, run:
 
 ```sh
-node cli.js path/to/file.html
+node cli.js -i path/to/input/dir -o path/to/output/dir
 ```

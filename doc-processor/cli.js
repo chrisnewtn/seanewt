@@ -18,12 +18,12 @@ const {
     'input-dir': {
       type: 'string',
       short: 'i',
-      default: path.resolve(__dirname, '..', '..', 'docs-raw')
+      default: path.resolve(__dirname, '..', '..', 'pages')
     },
     'output-dir': {
       type: 'string',
       short: 'o',
-      default: path.resolve(__dirname, '..', '..', 'docs')
+      default: path.resolve(__dirname, '..', '..', 'public')
     }
   }
 });
