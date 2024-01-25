@@ -32,7 +32,7 @@ const writtenAssets = new Set();
 
 for (const inputFile of await fs.readdir(inputDir, {withFileTypes: true})) {
   if (inputFile.isDirectory() || !inputFile.name.endsWith(".html")) {
-    break;
+    continue;
   }
   const pathToInput = path.join(inputDir, inputFile.name);
   const fileContents = await fs.readFile(pathToInput, "utf8");
@@ -47,7 +47,7 @@ for (const inputFile of await fs.readdir(inputDir, {withFileTypes: true})) {
 
   for (const [pathToNewAsset, pathToOldAsset] of assets) {
     if (writtenAssets.has(pathToNewAsset)) {
-      break;
+      continue;
     }
 
     await pipeline(
