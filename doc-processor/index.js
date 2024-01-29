@@ -1,31 +1,44 @@
+import path from 'node:path';
 import {unified} from 'unified';
 import rehypeParse from 'rehype-parse';
 import rehypeFormat from 'rehype-format';
 import rehypeStringify from 'rehype-stringify';
-import hashCss from './src/unified-plugins/hashCss.js';
-import hashImages from './src/unified-plugins/hashImages.js';
+import remarkParse from 'remark-parse';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkGfm from 'remark-gfm';
+import remarkRehype from 'remark-rehype';
+import hashAssets from './src/unified-plugins/hashAssets.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
- * @param {string} pathToFile
- * @param {string} fileContents
+ * @param {Object} params
+ * @param {Object} params.inputFile
+ * @param {string} params.inputFile.name
+ * @param {string} params.inputFile.text
+ * @param {string} params.outputDir
  */
 export async function processDocument({
   inputFile,
-  outputDir
+  outputDir,
+  assets = new Map()
 }) {
-  const assets = new Map();
+  const ext = path.extname(inputFile.name);
+  const processor = unified();
 
-  const vFile = await unified()
-    .use(rehypeParse, {
+  if (ext === '.html') {
+    processor.use(rehypeParse, {
       fragment: false
-    })
-    .use(hashCss, {
-      pathToFile: inputFile.name,
-      outputDir,
-      assets
-    })
-    .use(hashImages, {
+    });
+  } else if (ext === '.md') {
+    processor
+      .use(remarkParse)
+      .use(remarkFrontmatter)
+      .use(remarkGfm)
+      .use(remarkRehype);
+  }
+
+  return await processor
+    .use(hashAssets, {
       pathToFile: inputFile.name,
       outputDir,
       assets
@@ -41,9 +54,4 @@ export async function processDocument({
       }
     })
     .process(inputFile.text);
-
-  return {
-    vFile,
-    assets
-  };
 }

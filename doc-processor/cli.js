@@ -5,6 +5,7 @@ import {parseArgs} from 'node:util';
 import {processDocument} from './index.js';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {ensureDirectory} from './src/util.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,41 +29,57 @@ const {
   }
 });
 
+const assets = new Map();
 const writtenAssets = new Set();
 
-for (const inputFile of await fs.readdir(inputDir, {withFileTypes: true})) {
-  if (inputFile.isDirectory() || !inputFile.name.endsWith('.html')) {
-    continue;
-  }
-  const pathToInput = path.join(inputDir, inputFile.name);
-  const fileContents = await fs.readFile(pathToInput, 'utf8');
-
-  const {vFile, assets} = await processDocument({
-    inputFile: {
-      name: pathToInput,
-      text: fileContents
-    },
-    outputDir
-  });
-
-  for (const [pathToNewAsset, pathToOldAsset] of assets) {
-    if (writtenAssets.has(pathToNewAsset)) {
+async function processDirectory(pathToDir) {
+  for (const inputFile of await fs.readdir(pathToDir, {withFileTypes: true})) {
+    if (inputFile.isDirectory()) {
+      await processDirectory(path.join(pathToDir, inputFile.name));
       continue;
     }
+    if (!inputFile.name.endsWith('.html')) {
+      continue;
+    }
+    const pathToInput = path.join(pathToDir, inputFile.name);
+    const pathToOutputDir = path.join(outputDir, path.relative(inputDir, pathToDir));
 
-    await pipeline(
-      createReadStream(pathToOldAsset),
-      createWriteStream(pathToNewAsset)
-    );
+    console.log('processing', pathToInput);
+    const fileContents = await fs.readFile(pathToInput, 'utf8');
 
-    console.log('write', pathToNewAsset);
+    const vFile = await processDocument({
+      inputFile: {
+        name: pathToInput,
+        text: fileContents
+      },
+      assets,
+      outputDir: pathToOutputDir
+    });
 
-    writtenAssets.add(pathToNewAsset);
+    await ensureDirectory(pathToOutputDir);
+
+    for (const [pathToOldAsset, pathToNewAsset] of assets) {
+      if (writtenAssets.has(pathToNewAsset)) {
+        continue;
+      }
+
+      await ensureDirectory(path.dirname(pathToNewAsset));
+
+      console.log('write', pathToNewAsset);
+
+      await pipeline(
+        createReadStream(pathToOldAsset),
+        createWriteStream(pathToNewAsset)
+      );
+
+      writtenAssets.add(pathToNewAsset);
+    }
+
+    const pathToOutput = path.join(pathToOutputDir, inputFile.name);
+
+    console.log('write', pathToOutput);
+    await fs.writeFile(pathToOutput, String(vFile), 'utf8');
   }
-
-  const pathToOutput = path.join(outputDir, inputFile.name);
-
-  await fs.writeFile(pathToOutput, String(vFile), 'utf8');
-
-  console.log('write', pathToOutput);
 }
+
+await processDirectory(inputDir);
