@@ -1,6 +1,6 @@
-import path from "node:path";
-import {selectAll} from "hast-util-select";
-import {shasum} from "../util.js";
+import path from 'node:path';
+import {selectAll} from 'hast-util-select';
+import {shasum} from '../util.js';
 
 /**
  * Renames each locally referenced CSS file with a 7 character short hash of its
@@ -16,15 +16,15 @@ export default function hashCss({
   const pathToDir = path.dirname(pathToFile);
 
   return async tree => {
-    for (const el of selectAll("link[rel=stylesheet]", tree)) {
+    for (const el of selectAll('link[rel=stylesheet]', tree)) {
       const href = el.properties.href;
 
-      if (href.startsWith("http")) {
+      if (href.startsWith('http')) {
         // It's an external asset. Ignore it.
         continue;
       }
 
-      const [pathPart, searchString] = href.split("?");
+      const [pathPart, searchString] = href.split('?');
       const pathToAsset = path.resolve(pathToDir, pathPart);
 
       const hash = await shasum(pathToAsset);
