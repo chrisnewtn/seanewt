@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "hast-util-select": "^6.0.2",
+    "hastscript": "^9.0.0",
     "rehype-format": "^5.0.0",
     "rehype-parse": "^9.0.0",
     "rehype-stringify": "^10.0.0",
@@ -19,7 +20,8 @@
     "remark-gfm": "^4.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.0",
-    "unified": "^11.0.4"
+    "unified": "^11.0.4",
+    "vfile-matter": "^5.0.0"
   },
   "devDependencies": {
     "eslint": "^8.56.0"

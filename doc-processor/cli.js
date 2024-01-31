@@ -29,6 +29,8 @@ const {
   }
 });
 
+const processable = new Set(['.html', '.md']);
+
 const assets = new Map();
 const writtenAssets = new Set();
 
@@ -38,9 +40,13 @@ async function processDirectory(pathToDir) {
       await processDirectory(path.join(pathToDir, inputFile.name));
       continue;
     }
-    if (!inputFile.name.endsWith('.html')) {
+
+    const ext = path.extname(inputFile.name);
+
+    if (!processable.has(ext)) {
       continue;
     }
+
     const pathToInput = path.join(pathToDir, inputFile.name);
     const pathToOutputDir = path.join(outputDir, path.relative(inputDir, pathToDir));
 
@@ -75,7 +81,8 @@ async function processDirectory(pathToDir) {
       writtenAssets.add(pathToNewAsset);
     }
 
-    const pathToOutput = path.join(pathToOutputDir, inputFile.name);
+    const outputName = `${path.basename(inputFile.name, ext)}.html`;
+    const pathToOutput = path.join(pathToOutputDir, outputName);
 
     console.log('write', pathToOutput);
     await fs.writeFile(pathToOutput, String(vFile), 'utf8');

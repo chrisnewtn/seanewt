@@ -8,6 +8,8 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import hashAssets from './src/unified-plugins/hashAssets.js';
+import applyTemplate from './src/unified-plugins/applyTemplate.js';
+import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -32,9 +34,15 @@ export async function processDocument({
   } else if (ext === '.md') {
     processor
       .use(remarkParse)
-      .use(remarkFrontmatter)
+      .use(remarkFrontmatter, ['yaml'])
+      .use(parseYamlFrontmatter)
       .use(remarkGfm)
-      .use(remarkRehype);
+      .use(remarkRehype)
+      .use(applyTemplate, {
+        pathToFile: inputFile.name,
+        outputDir,
+        assets
+      });
   }
 
   return await processor

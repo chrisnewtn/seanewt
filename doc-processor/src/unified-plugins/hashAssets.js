@@ -1,20 +1,6 @@
 import path from 'node:path';
-import {selectAll} from 'hast-util-select';
 import {shasum} from '../util.js';
-
-const selectors = new Set([
-  'link[rel=stylesheet]',
-  'img',
-  'picture>source'
-]);
-
-const tagNameToProp = new Map([
-  ['link', 'href'],
-  ['img', 'src'],
-  ['source', 'srcSet']
-]);
-
-const selection = Array.from(selectors).join(',');
+import {selectAllAssetElements} from './shared.js';
 
 /**
  * @type {import('unified').Plugin<[], import('hast').Root>}
@@ -27,20 +13,8 @@ export default function hashCss({
   const pathToDir = path.dirname(pathToFile);
 
   return async tree => {
-    for (const el of selectAll(selection, tree)) {
-      const propName = tagNameToProp.get(el.tagName);
-
-      if (!propName) {
-        throw new Error(`No prop found to overwrite for "${el.tagName}"`);
-      }
-
-      const href = el.properties[propName];
-
-      if (href.startsWith('http')) {
-        // It's an external asset. Ignore it.
-        continue;
-      }
-
+    for (const {el, assetProp} of selectAllAssetElements(tree)) {
+      const href = el.properties[assetProp];
       const [pathPart, searchString] = href.split('?');
       const pathToAsset = path.resolve(pathToDir, pathPart);
       let newName;
@@ -63,7 +37,7 @@ export default function hashCss({
         assets.set(pathToAsset, path.resolve(outputDir, newName));
       }
 
-      el.properties[propName] = `${newName}${searchString ? `?${searchString}` : ''}`;
+      el.properties[assetProp] = `${newName}${searchString ? `?${searchString}` : ''}`;
     }
   };
 }
