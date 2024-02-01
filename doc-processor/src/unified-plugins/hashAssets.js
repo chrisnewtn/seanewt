@@ -13,8 +13,8 @@ export default function hashCss({
   const pathToDir = path.dirname(pathToFile);
 
   return async tree => {
-    for (const {el, assetProp} of selectAllAssetElements(tree)) {
-      const href = el.properties[assetProp];
+    for (const {el, linkProp} of selectAllAssetElements(tree)) {
+      const href = el.properties[linkProp];
       const [pathPart, searchString] = href.split('?');
       const pathToAsset = path.resolve(pathToDir, pathPart);
       let newName;
@@ -37,7 +37,7 @@ export default function hashCss({
         assets.set(pathToAsset, path.resolve(outputDir, newName));
       }
 
-      el.properties[assetProp] = `${newName}${searchString ? `?${searchString}` : ''}`;
+      el.properties[linkProp] = `${newName}${searchString ? `?${searchString}` : ''}`;
     }
   };
 }

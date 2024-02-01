@@ -1,36 +1,47 @@
 import {selectAll} from 'hast-util-select';
 
-const selectors = new Set([
+const assetSelectors = new Set([
   'link[rel=stylesheet]',
   'img',
   'picture>source'
 ]);
 
 const tagNameToProp = new Map([
+  ['a', 'href'],
   ['link', 'href'],
   ['img', 'src'],
   ['source', 'srcSet']
 ]);
 
-const selection = Array.from(selectors).join(',');
+const elementsWithLinks = new Set([
+  ...assetSelectors,
+  'a'
+]);
 
-function onlyIncludeLocalAssets(memo, el) {
-  const assetProp = tagNameToProp.get(el.tagName);
+const assetSelection = Array.from(assetSelectors).join(',');
+const linkSelection = Array.from(elementsWithLinks).join(',');
 
-  if (!assetProp) {
+function onlyIncludeLocalLinks(memo, el) {
+  const linkProp = tagNameToProp.get(el.tagName);
+
+  if (!linkProp) {
     throw new Error(`No prop found to overwrite for "${el.tagName}"`);
   }
 
-  const href = el.properties[assetProp];
+  const href = el.properties[linkProp];
 
   if (!href || href.startsWith('http')) {
     // Empty value or it's an external asset. Ignore it.
     return memo;
   }
 
-  return memo.concat({el, assetProp});
+  return memo.concat({el, linkProp});
 }
 
 export function selectAllAssetElements(tree) {
-  return selectAll(selection, tree).reduce(onlyIncludeLocalAssets, []);
+  return selectAll(assetSelection, tree).reduce(onlyIncludeLocalLinks, []);
+}
+
+export function selectAllLinkedElements(tree) {
+  return selectAll(linkSelection, tree).reduce(onlyIncludeLocalLinks, []);
 }

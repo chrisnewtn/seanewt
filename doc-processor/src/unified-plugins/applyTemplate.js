@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import {select} from 'hast-util-select';
 import {unified} from 'unified';
 import rehypeParse from 'rehype-parse';
-import {selectAllAssetElements} from './shared.js';
+import {selectAllLinkedElements} from './shared.js';
 import {h} from 'hastscript';
 
 const templateCache = new Map();
@@ -16,12 +16,12 @@ function correctPaths({
   pathToTemplate
 }) {
   return tree => {
-    for (const {el, assetProp} of selectAllAssetElements(tree)) {
-      el.properties[assetProp] = path.posix.relative(
+    for (const {el, linkProp} of selectAllLinkedElements(tree)) {
+      el.properties[linkProp] = path.posix.relative(
         path.posix.dirname(pathToFile),
         path.posix.resolve(
           path.posix.dirname(pathToTemplate),
-          el.properties[assetProp]
+          el.properties[linkProp]
         )
       );
     }
@@ -60,7 +60,7 @@ export default function applyTemplate({
 }) {
 
   return async (tree, file) => {
-    const {title, template} = file.data.matter;
+    const {title, template, 'date-published': datePublished} = file.data.matter;
 
     if (!template) {
       throw new Error(`No template specified for "${pathToFile}"`);
@@ -87,8 +87,24 @@ export default function applyTemplate({
 
     Object.assign(tree, templateTree);
 
+    // This bit is all obviously very post-specific, but since it's the only
+    // use case for now, it's staying here.
+
     const articleEl = select('article', tree);
 
     children.forEach(el => articleEl.children.push(el));
+
+    const timeEl = select('.date-published time', tree);
+
+    timeEl.properties.datetime = datePublished;
+    timeEl.children.push({
+      type: 'text',
+      value: new Date(datePublished).toLocaleString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    });
   };
 }
