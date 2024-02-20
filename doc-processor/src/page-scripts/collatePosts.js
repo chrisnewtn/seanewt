@@ -84,6 +84,19 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
 
     const postContainer = structuredClone(articleTemplate);
 
+    const timeEl = select('.date-published time', postContainer);
+
+    timeEl.properties.datetime = post.data['date-published'];
+    timeEl.children.push({
+      type: 'text',
+      value: new Date(post.data['date-published']).toLocaleString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    });
+
     postContainer.children.push(
       select('h1', post.tree),
       select('p', post.tree),
