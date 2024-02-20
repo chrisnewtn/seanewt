@@ -8,8 +8,9 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import hashAssets from './src/unified-plugins/hashAssets.js';
-import applyTemplate from './src/unified-plugins/applyTemplate.js';
+import applyPageTemplate from './src/unified-plugins/applyPageTemplate.js';
 import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js';
+import applyPageScript from './src/unified-plugins/applyPageScript.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -18,10 +19,12 @@ import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js'
  * @param {string} params.inputFile.name
  * @param {string} params.inputFile.text
  * @param {string} params.outputDir
+ * @param {import('./src/util.js').FileCache} params.fileCache
  */
 export async function processDocument({
   inputFile,
   outputDir,
+  fileCache,
   assets = new Map()
 }) {
   const ext = path.extname(inputFile.name);
@@ -38,7 +41,7 @@ export async function processDocument({
       .use(parseYamlFrontmatter)
       .use(remarkGfm)
       .use(remarkRehype)
-      .use(applyTemplate, {
+      .use(applyPageTemplate, {
         pathToFile: inputFile.name,
         outputDir,
         assets
@@ -46,6 +49,10 @@ export async function processDocument({
   }
 
   return await processor
+    .use(applyPageScript, {
+      pathToFile: inputFile.name,
+      fileCache
+    })
     .use(hashAssets, {
       pathToFile: inputFile.name,
       outputDir,

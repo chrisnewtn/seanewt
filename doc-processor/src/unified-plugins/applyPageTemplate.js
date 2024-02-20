@@ -55,7 +55,7 @@ function applyPageTitle({
 /**
  * @type {import('unified').Plugin<[], import('hast').Root>}
  */
-export default function applyTemplate({
+export default function applyPageTemplate({
   pathToFile
 }) {
 

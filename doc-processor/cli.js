@@ -5,7 +5,7 @@ import {parseArgs} from 'node:util';
 import {processDocument} from './index.js';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {ensureDirectory} from './src/util.js';
+import {FileCache, ensureDirectory} from './src/util.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +31,7 @@ const {
 
 const processable = new Set(['.html', '.md']);
 
+const fileCache = new FileCache();
 const assets = new Map();
 const writtenAssets = new Set();
 
@@ -51,7 +52,7 @@ async function processDirectory(pathToDir) {
     const pathToOutputDir = path.join(outputDir, path.relative(inputDir, pathToDir));
 
     console.log('processing', pathToInput);
-    const fileContents = await fs.readFile(pathToInput, 'utf8');
+    const fileContents = await fileCache.get(pathToInput);
 
     const vFile = await processDocument({
       inputFile: {
@@ -59,6 +60,7 @@ async function processDirectory(pathToDir) {
         text: fileContents
       },
       assets,
+      fileCache,
       outputDir: pathToOutputDir
     });
 

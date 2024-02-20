@@ -31,3 +31,14 @@ export async function ensureDirectory(pathToDirectory) {
     await fs.mkdir(pathToDirectory, {recursive: true});
   }
 }
+
+export class FileCache extends Map {
+  async get(key) {
+    if (super.has(key)) {
+      return super.get(key);
+    }
+    const text = await fs.readFile(key, 'utf8');
+    super.set(key, text);
+    return text;
+  }
+}
