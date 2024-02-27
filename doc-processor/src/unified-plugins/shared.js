@@ -3,14 +3,16 @@ import {selectAll} from 'hast-util-select';
 const assetSelectors = new Set([
   'link[rel=stylesheet]',
   'img',
-  'picture>source'
+  'picture>source',
+  'script[src]'
 ]);
 
 const tagNameToProp = new Map([
   ['a', 'href'],
   ['link', 'href'],
   ['img', 'src'],
-  ['source', 'srcSet']
+  ['source', 'srcSet'],
+  ['script', 'src']
 ]);
 
 const elementsWithLinks = new Set([
