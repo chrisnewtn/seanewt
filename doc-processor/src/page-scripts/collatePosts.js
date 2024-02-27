@@ -10,6 +10,10 @@ import remarkRehype from 'remark-rehype';
 import {VFile} from 'vfile';
 import {h} from 'hastscript';
 
+function byMostRecentFirst({datePublished: a}, {datePublished: b}) {
+  return b - a;
+}
+
 async function parsePostText(text) {
   const data = {};
 
@@ -75,12 +79,15 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
 
   removeElement(baseTemplate, tree);
 
+  const snippets = [];
+
   for (const postFile of await fs.readdir(pathToPosts, {withFileTypes: true})) {
     if (!postFile.isFile() || !postFile.name.endsWith('.md')) {
       continue;
     }
     const fileText = await fileCache.get(path.join(pathToPosts, postFile.name));
     const post = await parsePostText(fileText);
+    const datePublished = new Date(post.data['date-published']);
 
     const postContainer = structuredClone(articleTemplate);
 
@@ -89,7 +96,7 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
     timeEl.properties.datetime = post.data['date-published'];
     timeEl.children.push({
       type: 'text',
-      value: new Date(post.data['date-published']).toLocaleString('en-GB', {
+      value: datePublished.toLocaleString('en-GB', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -106,6 +113,10 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
       ])
     );
 
-    postsContainer.children.push(postContainer);
+    snippets.push({datePublished, tree: postContainer});
   }
+
+  postsContainer.children.push(
+    ...snippets.sort(byMostRecentFirst).map(({tree}) => tree)
+  );
 }
