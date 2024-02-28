@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import {select} from 'hast-util-select';
 import {unified} from 'unified';
 import rehypeParse from 'rehype-parse';
-import {selectAllLinkedElements} from './shared.js';
+import {applyDateToTime, removeElement, selectAllLinkedElements} from './shared.js';
 import {h} from 'hastscript';
 
 const templateCache = new Map();
@@ -60,7 +60,12 @@ export default function applyPageTemplate({
 }) {
 
   return async (tree, file) => {
-    const {title, template, 'date-published': datePublished} = file.data.matter;
+    const {
+      title,
+      template,
+      'date-published': datePublished,
+      'date-updated': dateUpdated
+    } = file.data.matter;
 
     if (!template) {
       throw new Error(`No template specified for "${pathToFile}"`);
@@ -94,17 +99,14 @@ export default function applyPageTemplate({
 
     children.forEach(el => articleEl.children.push(el));
 
-    const timeEl = select('.date-published time', tree);
+    const publishedEl = select('.dt-published', tree);
+    applyDateToTime(publishedEl, datePublished);
 
-    timeEl.properties.datetime = datePublished;
-    timeEl.children.push({
-      type: 'text',
-      value: new Date(datePublished).toLocaleString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      })
-    });
+    if (dateUpdated) {
+      const updatedEl = select('.dt-updated', tree);
+      applyDateToTime(updatedEl, dateUpdated);
+    } else {
+      removeElement(select('.updated', tree), tree);
+    }
   };
 }

@@ -9,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import {VFile} from 'vfile';
 import {h} from 'hastscript';
+import {applyDateToTime, removeElement} from '../unified-plugins/shared.js';
 
 function byMostRecentFirst({datePublished: a}, {datePublished: b}) {
   return b - a;
@@ -30,29 +31,6 @@ async function parsePostText(text) {
   const tree = await processor.run(processor.parse(text), new VFile(text));
 
   return {tree, data};
-}
-
-/**
- *
- * @param {import('hast').Element} elementToRemove
- * @param {import('hast').Element} tree
- */
-function removeElement(elementToRemove, tree) {
-  for (const element of tree.children) {
-    if (element === elementToRemove) {
-      tree.children.splice(
-        tree.children.indexOf(element),
-        1
-      );
-      return true;
-    }
-    if (Array.isArray(element.children) && element.children.length > 0) {
-      if (removeElement(elementToRemove, element)) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 /**
@@ -91,18 +69,8 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
 
     const postContainer = structuredClone(articleTemplate);
 
-    const timeEl = select('.date-published time', postContainer);
-
-    timeEl.properties.datetime = post.data['date-published'];
-    timeEl.children.push({
-      type: 'text',
-      value: datePublished.toLocaleString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      })
-    });
+    const timeEl = select('.dt-published', postContainer);
+    applyDateToTime(timeEl, post.data['date-published']);
 
     postContainer.children.push(
       select('h1', post.tree),
