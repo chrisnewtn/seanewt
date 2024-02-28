@@ -11,6 +11,7 @@ import hashAssets from './src/unified-plugins/hashAssets.js';
 import applyPageTemplate from './src/unified-plugins/applyPageTemplate.js';
 import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js';
 import applyPageScript from './src/unified-plugins/applyPageScript.js';
+import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -50,6 +51,10 @@ export async function processDocument({
 
   return await processor
     .use(applyPageScript, {
+      pathToFile: inputFile.name,
+      fileCache
+    })
+    .use(fixInternalLinks, {
       pathToFile: inputFile.name,
       fileCache
     })
