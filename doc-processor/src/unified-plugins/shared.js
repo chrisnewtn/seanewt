@@ -42,6 +42,7 @@ export function removeElement(elementToRemove, tree) {
 
 const assetSelectors = new Set([
   'link[rel=stylesheet]',
+  'link[rel=icon]',
   'img',
   'picture>source',
   'script[src]'
