@@ -30,6 +30,7 @@ const {
 });
 
 const processable = new Set(['.html', '.md']);
+const isTemplate = name => name.endsWith('.template.html');
 
 const fileCache = new FileCache();
 const assets = new Map();
@@ -44,7 +45,7 @@ async function processDirectory(pathToDir) {
 
     const ext = path.extname(inputFile.name);
 
-    if (!processable.has(ext)) {
+    if (!processable.has(ext) || isTemplate(inputFile.name)) {
       continue;
     }
 
