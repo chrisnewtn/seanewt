@@ -12,6 +12,7 @@ import applyPageTemplate from './src/unified-plugins/applyPageTemplate.js';
 import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js';
 import applyPageScript from './src/unified-plugins/applyPageScript.js';
 import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
+import applyGitHubSha from './src/unified-plugins/applyGitHubSha.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -63,6 +64,7 @@ export async function processDocument({
       outputDir,
       assets
     })
+    .use(applyGitHubSha)
     .use(rehypeFormat, {
       indentInitial: false,
     })
