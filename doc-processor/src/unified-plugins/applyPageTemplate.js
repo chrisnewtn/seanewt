@@ -55,6 +55,24 @@ function applyPageTitle({
 /**
  * @type {import('unified').Plugin<[], import('hast').Root>}
  */
+function applyPageDescription({
+  pathToTemplate,
+  description
+}) {
+  return tree => {
+    const descriptionEl = select('meta[name=description]', tree);
+
+    if (!descriptionEl) {
+      throw new Error(`meta[name=description] not found in ${pathToTemplate}`);
+    }
+
+    descriptionEl.properties.content = description;
+  };
+}
+
+/**
+ * @type {import('unified').Plugin<[], import('hast').Root>}
+ */
 export default function applyPageTemplate({
   pathToFile
 }) {
@@ -63,6 +81,7 @@ export default function applyPageTemplate({
     const {
       title,
       template,
+      description,
       'date-published': datePublished,
       'date-updated': dateUpdated
     } = file.data.matter;
@@ -81,7 +100,8 @@ export default function applyPageTemplate({
     const processor = unified()
       .use(rehypeParse)
       .use(correctPaths, {pathToFile, pathToTemplate})
-      .use(applyPageTitle, {title, pathToTemplate});
+      .use(applyPageTitle, {title, pathToTemplate})
+      .use(applyPageDescription, {description, pathToTemplate});
 
     const templateTree = await processor.run(processor.parse(templateText));
 
