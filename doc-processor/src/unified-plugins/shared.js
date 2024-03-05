@@ -18,6 +18,29 @@ export function applyDateToTime(timeEl, date) {
 }
 
 /**
+ * Find the `Element` that has the given `element` in the given `tree`.
+ * @param {import('hast').Element} element
+ * @param {import('hast').Element} tree
+ * @returns {import('hast').Element | null} The parent of `element`.
+ */
+export function selectParent(element, tree) {
+  if (!tree || !Array.isArray(tree.children)) {
+    return null;
+  }
+  if (tree.children.includes(element)) {
+    return tree;
+  }
+  for (const childTree of tree.children) {
+    const parent = selectParent(element, childTree);
+
+    if (parent !== null) {
+      return parent;
+    }
+  }
+  return null;
+}
+
+/**
  *
  * @param {import('hast').Element} elementToRemove
  * @param {import('hast').Element} tree

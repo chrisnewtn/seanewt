@@ -13,6 +13,7 @@ import parseYamlFrontmatter from './src/unified-plugins/parseYamlFrontmatter.js'
 import applyPageScript from './src/unified-plugins/applyPageScript.js';
 import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
 import applyGitHubSha from './src/unified-plugins/applyGitHubSha.js';
+import optimizeImages from './src/unified-plugins/optimizeImages.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -27,7 +28,8 @@ export async function processDocument({
   inputFile,
   outputDir,
   fileCache,
-  assets = new Map()
+  assets = new Map(),
+  writtenAssets
 }) {
   const ext = path.extname(inputFile.name);
   const processor = unified();
@@ -58,6 +60,12 @@ export async function processDocument({
     .use(fixInternalLinks, {
       pathToFile: inputFile.name,
       fileCache
+    })
+    .use(optimizeImages, {
+      pathToFile: inputFile.name,
+      outputDir,
+      assets,
+      writtenAssets
     })
     .use(hashAssets, {
       pathToFile: inputFile.name,

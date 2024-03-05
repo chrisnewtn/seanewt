@@ -62,6 +62,7 @@ async function processDirectory(pathToDir) {
       },
       assets,
       fileCache,
+      writtenAssets,
       outputDir: pathToOutputDir
     });
 

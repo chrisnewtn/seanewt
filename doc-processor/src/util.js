@@ -1,6 +1,18 @@
 import {createHash} from 'node:crypto';
 import {createReadStream} from 'node:fs';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+
+export function toHashedFilename(pathToFile, hash, newExt = '') {
+  const extname = path.extname(pathToFile);
+  const dirname = path.dirname(pathToFile);
+  const basename = path.basename(pathToFile, extname);
+
+  return path.posix.join(
+    dirname,
+    `${basename}-${hash.substring(0, 7)}${newExt || extname}`
+  );
+}
 
 /**
 * Returns the sha256sum of the given file.
