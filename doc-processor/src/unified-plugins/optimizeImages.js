@@ -3,7 +3,6 @@ import {Buffer} from 'node:buffer';
 import {createHash} from 'node:crypto';
 import {createReadStream} from 'node:fs';
 import fs from 'node:fs/promises';
-// import {pipeline} from 'node:stream/promises';
 import {h} from 'hastscript';
 import sharp from 'sharp';
 import {selectAll} from 'hast-util-select';
@@ -75,6 +74,9 @@ export default function optimizeImages({
 
       // tell the rest of the application we've figured out the new location.
       assets.set(pathToImage, pathToNewImage);
+
+      // make sure the destination directory exists.
+      await fs.mkdir(path.dirname(pathToNewImage), {recursive: true});
 
       // copy over the original file with its new hashed name.
       console.log('write', pathToNewImage);
