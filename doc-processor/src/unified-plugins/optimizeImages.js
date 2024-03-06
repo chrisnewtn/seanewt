@@ -201,6 +201,7 @@ export default function optimizeImages({
       // original image.
       const anchorEl = h('a', {
         href: primaryImage.name,
+        class: 'article-image',
         target: '_blank',
         title: 'View full image'
       }, [pictureEl]);
