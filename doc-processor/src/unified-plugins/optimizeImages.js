@@ -10,9 +10,19 @@ import {selectParent} from './shared.js';
 import {toHashedFilename} from '../util.js';
 
 /**
+ * @typedef {sharp.OutputOptions | sharp.JpegOptions | sharp.PngOptions | sharp.WebpOptions | sharp.AvifOptions | sharp.HeifOptions | sharp.JxlOptions | sharp.GifOptions | sharp.Jp2Options | sharp.TiffOptions} OutputOptions
+ */
+
+const mebibyte = 1024 * 1024;
+
+function toMiB(bytes) {
+  return `${(bytes / mebibyte).toFixed(4)} MiB`;
+}
+
+/**
  * @param {Buffer} buffer
  */
-async function getImageSize(buffer) {
+async function getImageInfo(buffer) {
   const {info} = await sharp(buffer).toBuffer({resolveWithObject: true});
   return info;
 }
@@ -21,7 +31,7 @@ async function getImageSize(buffer) {
  * @param {Object} sourceFile
  * @param {Buffer} sourceFile.buffer
  * @param {string} sourceFile.name
- * @param {sharp.WebpOptions | sharp.AvifOptions | sharp.PngOptions} newFormat
+ * @param {OutputOptions} newFormat
  */
 async function convert({buffer, name}, newFormat) {
   const {data: newBuffer, info} = await sharp(buffer)
@@ -52,10 +62,41 @@ export default function optimizeImages({
   assets,
   writtenAssets
 }) {
+  function toDiskPath(src) {
+    return path.resolve(path.dirname(pathToFile), src);
+  }
+
+  async function processImage(src, srcBuffer, destFormat) {
+    console.log(`convert to ${destFormat.id}`, toDiskPath(src));
+
+    const image = await convert(
+      {
+        buffer: srcBuffer,
+        name: src
+      },
+      destFormat
+    );
+
+    const pathToNewImage = path.resolve(outputDir, image.name);
+
+    // write the newly converted image
+    console.log('write', pathToNewImage);
+    await fs.writeFile(pathToNewImage, image.buffer);
+
+    // throw this after the image is written to hopefully help with diagnostics.
+    if (image.info.size > 1 * mebibyte) {
+      throw new Error(`Image too large (${toMiB(image.info.size)}) ${pathToNewImage}`);
+    }
+
+    // tell the rest of the app to not bother doing this again.
+    writtenAssets.add(pathToNewImage);
+
+    return image;
+  }
 
   return async tree => {
     for (const imgEl of selectAll('main img', tree)) {
-      const pathToImage = path.resolve(path.dirname(pathToFile), imgEl.properties.src);
+      const pathToImage = toDiskPath(imgEl.properties.src);
       const parentEl = selectParent(imgEl, tree);
 
       // read in the original file and compute its hash.
@@ -67,95 +108,99 @@ export default function optimizeImages({
         hash.update(chunk);
       }
 
+      const additionalFormats = [];
       const sourceBuffer = Buffer.concat(bufferList);
 
-      const newName = toHashedFilename(imgEl.properties.src, hash.digest('hex'));
-      const pathToNewImage = path.resolve(outputDir, newName);
+      const imageInfo = await getImageInfo(sourceBuffer);
 
-      // tell the rest of the application we've figured out the new location.
-      assets.set(pathToImage, pathToNewImage);
+      let primaryImage = {
+        buffer: sourceBuffer,
+        info: imageInfo,
+        name: toHashedFilename(imgEl.properties.src, hash.digest('hex')),
+      };
 
       // make sure the destination directory exists.
-      await fs.mkdir(path.dirname(pathToNewImage), {recursive: true});
+      const destDir = path.resolve(outputDir, path.dirname(imgEl.properties.src));
+      console.log('mkdir -p', destDir)
+      await fs.mkdir(destDir, {recursive: true});
 
-      // copy over the original file with its new hashed name.
-      console.log('write', pathToNewImage);
-      await fs.writeFile(pathToNewImage, sourceBuffer);
-
-      // tell the rest of the app to not bother doing this again.
-      writtenAssets.add(pathToNewImage);
-
-      const imageInfo = await getImageSize(sourceBuffer);
-
-      imgEl.properties.width = imageInfo.width;
-      imgEl.properties.height = imageInfo.height;
-
-      // Convert the image to webp
-      console.log('convert to webp', pathToImage);
-      const webpImage = await convert(
-        {
-          buffer: sourceBuffer,
-          name: imgEl.properties.src
-        },
-        {
-          id: 'webp',
-          lossless: true
+      if (imageInfo.size > 1 * mebibyte) {
+        if (imageInfo.type === "jpeg") {
+          throw new Error(`Image too large (${toMiB(imageInfo.size)}) ${pathToImage}`);
         }
-      );
 
-      const pathToWebpImage = path.resolve(outputDir, webpImage.name);
+        primaryImage = await processImage(imgEl.properties.src, sourceBuffer, {
+          id: 'jpeg'
+        });
 
-      // write the newly converted webp file
-      console.log('write', pathToWebpImage);
-      await fs.writeFile(pathToWebpImage, webpImage.buffer);
+        // // tell the rest of the application we've figured out the new location.
+        const pathToNewImage = path.resolve(outputDir, primaryImage.name);
+        assets.set(pathToImage, pathToNewImage);
+      } else {
+        const pathToNewImage = path.resolve(outputDir, primaryImage.name);
 
-      // tell the rest of the app to not bother doing this again.
-      writtenAssets.add(pathToWebpImage);
+        // tell the rest of the application we've figured out the new location.
+        assets.set(pathToImage, pathToNewImage);
 
-      const webpSourceEl = h('source', {
-        srcset: webpImage.name,
-        type: 'image/webp'
-      });
+        // copy over the original file with its new hashed name.
+        console.log('write', pathToNewImage);
+        await fs.writeFile(pathToNewImage, primaryImage.buffer);
 
-      // Convert the image to avif
-      console.log('convert to avif', pathToImage);
+        // tell the rest of the app to not bother doing this again.
+        writtenAssets.add(pathToNewImage);
+      }
 
-      const avifImage = await convert(
-        {
-          buffer: sourceBuffer,
-          name: imgEl.properties.src
-        },
-        {
+      imgEl.properties.width = primaryImage.info.width;
+      imgEl.properties.height = primaryImage.info.height;
+      imgEl.properties.src = primaryImage.name;
+
+      if (imageInfo.format !== 'avif') {
+        const avifImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'avif',
           lossless: true
-        }
-      );
+        });
 
-      const pathToAvifImage = path.resolve(outputDir, avifImage.name);
+        additionalFormats.push(h('source', {
+          srcset: avifImage.name,
+          type: 'image/avif'
+        }));
+      }
 
-      // write the newly converted avif file
-      console.log('write', pathToAvifImage);
-      await fs.writeFile(pathToAvifImage, avifImage.buffer);
+      if (imageInfo.format !== 'webp') {
+        const webpImage = await processImage(imgEl.properties.src, sourceBuffer, {
+          id: 'webp',
+          lossless: true
+        });
 
-      // tell the rest of the app to not bother doing this again.
-      writtenAssets.add(pathToAvifImage);
+        additionalFormats.push(h('source', {
+          srcset: webpImage.name,
+          type: 'image/webp'
+        }));
+      }
 
-      const avifSourceEl = h('source', {
-        srcset: avifImage.name,
-        type: 'image/avif'
-      });
+      // If the source image is a newer format already, output a jpeg as a
+      // backup for older browsers.
+      if (['avif', 'webp'].includes(imageInfo.format)) {
+        const jpegImage = await processImage(imgEl.properties.src, sourceBuffer, {
+          id: 'jpeg'
+        });
+
+        additionalFormats.push(h('source', {
+          srcset: jpegImage.name,
+          type: 'image/jpeg'
+        }));
+      }
 
       // create a containing element for original image and other file types.
       const pictureEl = h('picture', [
-        avifSourceEl,
-        webpSourceEl,
+        ...additionalFormats,
         imgEl
       ]);
 
       // wrap the picture in a link the user can click to easily view the
       // original image.
       const anchorEl = h('a', {
-        href: newName,
+        href: primaryImage.name,
         target: '_blank',
         title: 'View full image'
       }, [pictureEl]);
