@@ -85,7 +85,7 @@ export default function optimizeImages({
     await fs.writeFile(pathToNewImage, image.buffer);
 
     // throw this after the image is written to hopefully help with diagnostics.
-    if (image.info.size > 1 * mebibyte) {
+    if (image.info.size > 1.5 * mebibyte) {
       throw new Error(`Image too large (${toMiB(image.info.size)}) ${pathToNewImage}`);
     }
 
