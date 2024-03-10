@@ -1,4 +1,4 @@
-import {selectAll} from 'hast-util-select';
+import {select, selectAll} from 'hast-util-select';
 import {h} from 'hastscript';
 import {selectParent} from './shared.js';
 
@@ -16,8 +16,10 @@ export default function imageTitlesToCaptions() {
   return tree => {
     // Select all images with titles in the article.
     for (const pictureEl of selectAll('article picture:has(img[title])', tree)) {
+      // Get the picture's img element.
+      const imgEl = select('img', pictureEl);
       // Get the image's title property if it has one.
-      const title = pictureEl.children[0]?.properties.title;
+      const title = imgEl?.properties.title;
 
       // Ignore images with empty title properties.
       if (!title) {
@@ -40,7 +42,7 @@ export default function imageTitlesToCaptions() {
       );
 
       // Delete the title on the image as it is now duplicate data.
-      delete pictureEl.children[0].properties.title;
+      delete imgEl.properties.title;
     }
   };
 }
