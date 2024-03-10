@@ -14,6 +14,7 @@ import applyPageScript from './src/unified-plugins/applyPageScript.js';
 import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
 import applyGitHubSha from './src/unified-plugins/applyGitHubSha.js';
 import optimizeImages from './src/unified-plugins/optimizeImages.js';
+import imageTitlesToCaptions from './src/unified-plugins/imageTitlesToCaptions.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -69,6 +70,7 @@ export async function processDocument({
       assets,
       writtenAssets
     })
+    .use(imageTitlesToCaptions)
     .use(hashAssets, {
       pathToFile: inputFile.name,
       outputDir,
