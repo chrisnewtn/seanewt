@@ -198,20 +198,11 @@ export default function optimizeImages({
         imgEl
       ]);
 
-      // wrap the picture in a link the user can click to easily view the
-      // original image.
-      const anchorEl = h('a', {
-        href: primaryImage.name,
-        class: 'article-image',
-        target: '_blank',
-        title: 'View full image'
-      }, [pictureEl]);
-
       // overwrite the original `<img>` element in the tree.
       parentEl.children.splice(
         parentEl.children.indexOf(imgEl),
         1,
-        anchorEl
+        pictureEl
       );
     }
   };
