@@ -12,7 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const {
   values: {
     'input-dir': inputDir,
-    'output-dir': outputDir
+    'output-dir': outputDir,
+    'skip-image-optimization': skipImageOptimization
   }
 } = parseArgs({
   options: {
@@ -25,6 +26,11 @@ const {
       type: 'string',
       short: 'o',
       default: path.resolve(__dirname, '..', '..', 'public')
+    },
+    'skip-image-optimization': {
+      type: 'boolean',
+      short: 's',
+      default: false
     }
   }
 });
@@ -61,6 +67,7 @@ async function processDirectory(pathToDir) {
         text: fileContents
       },
       assets,
+      skipImageOptimization,
       fileCache,
       writtenAssets,
       outputDir: pathToOutputDir

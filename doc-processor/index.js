@@ -29,6 +29,7 @@ export async function processDocument({
   outputDir,
   fileCache,
   assets = new Map(),
+  skipImageOptimization,
   writtenAssets
 }) {
   const ext = path.extname(inputFile.name);
@@ -62,6 +63,7 @@ export async function processDocument({
       fileCache
     })
     .use(optimizeImages, {
+      skip: skipImageOptimization,
       pathToFile: inputFile.name,
       outputDir,
       assets,

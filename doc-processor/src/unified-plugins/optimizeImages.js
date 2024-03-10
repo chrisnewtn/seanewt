@@ -57,6 +57,7 @@ async function convert({buffer, name}, newFormat) {
  * @type {import('unified').Plugin<[], import('hast').Root>}
  */
 export default function optimizeImages({
+  skip,
   pathToFile,
   outputDir,
   assets,
@@ -124,7 +125,7 @@ export default function optimizeImages({
       console.log('mkdir -p', destDir)
       await fs.mkdir(destDir, {recursive: true});
 
-      if (imageInfo.size > 1 * mebibyte) {
+      if (!skip && imageInfo.size > 1 * mebibyte) {
         if (imageInfo.type === "jpeg") {
           throw new Error(`Image too large (${toMiB(imageInfo.size)}) ${pathToImage}`);
         }
@@ -154,7 +155,7 @@ export default function optimizeImages({
       imgEl.properties.height = primaryImage.info.height;
       imgEl.properties.src = primaryImage.name;
 
-      if (imageInfo.format !== 'avif') {
+      if (!skip && imageInfo.format !== 'avif') {
         const avifImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'avif',
           lossless: true
@@ -166,7 +167,7 @@ export default function optimizeImages({
         }));
       }
 
-      if (imageInfo.format !== 'webp') {
+      if (!skip && imageInfo.format !== 'webp') {
         const webpImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'webp',
           lossless: true
@@ -180,7 +181,7 @@ export default function optimizeImages({
 
       // If the source image is a newer format already, output a jpeg as a
       // backup for older browsers.
-      if (['avif', 'webp'].includes(imageInfo.format)) {
+      if (!skip && ['avif', 'webp'].includes(imageInfo.format)) {
         const jpegImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'jpeg'
         });
