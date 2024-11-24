@@ -122,11 +122,11 @@ export default function optimizeImages({
 
       // make sure the destination directory exists.
       const destDir = path.resolve(outputDir, path.dirname(imgEl.properties.src));
-      console.log('mkdir -p', destDir)
+      console.log('mkdir -p', destDir);
       await fs.mkdir(destDir, {recursive: true});
 
       if (!skip && imageInfo.size > 1 * mebibyte) {
-        if (imageInfo.type === "jpeg") {
+        if (imageInfo.type === 'jpeg') {
           throw new Error(`Image too large (${toMiB(imageInfo.size)}) ${pathToImage}`);
         }
 
