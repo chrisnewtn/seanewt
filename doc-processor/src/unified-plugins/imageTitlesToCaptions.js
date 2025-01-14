@@ -1,6 +1,6 @@
 import {select, selectAll} from 'hast-util-select';
 import {h} from 'hastscript';
-import {selectParent} from './shared.js';
+import {findParent} from 'hast-util-find-parent';
 
 /**
  * A plugin that takes image titles and turns them into figcaptions.
@@ -32,7 +32,7 @@ export default function imageTitlesToCaptions() {
         h('figcaption', title)
       ]);
 
-      const pictureParentEl = selectParent(pictureEl, tree);
+      const pictureParentEl = findParent(pictureEl, tree);
 
       // Replace the picture element in the tree with the new figure element.
       pictureParentEl.children.splice(

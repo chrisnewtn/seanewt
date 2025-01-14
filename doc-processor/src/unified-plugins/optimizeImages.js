@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {h} from 'hastscript';
 import sharp from 'sharp';
 import {selectAll} from 'hast-util-select';
-import {selectParent} from './shared.js';
+import {findParent} from 'hast-util-find-parent';
 import {toHashedFilename} from '../util.js';
 
 /**
@@ -98,7 +98,7 @@ export default function optimizeImages({
   return async tree => {
     for (const imgEl of selectAll('main img', tree)) {
       const pathToImage = toDiskPath(imgEl.properties.src);
-      const parentEl = selectParent(imgEl, tree);
+      const parentEl = findParent(imgEl, tree);
 
       // read in the original file and compute its hash.
       const hash = createHash('sha256');
