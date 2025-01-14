@@ -15,6 +15,7 @@ import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
 import applyGitHubSha from './src/unified-plugins/applyGitHubSha.js';
 import optimizeImages from './src/unified-plugins/optimizeImages.js';
 import imageTitlesToCaptions from './src/unified-plugins/imageTitlesToCaptions.js';
+import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
 
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
@@ -75,6 +76,9 @@ export async function processDocument({
       pathToFile: inputFile.name,
       outputDir,
       assets
+    })
+    .use(applyCopyrightDate, {
+      startYear: '2024'
     })
     .use(applyGitHubSha)
     .use(rehypeFormat, {
