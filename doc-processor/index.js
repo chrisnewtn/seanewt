@@ -14,7 +14,7 @@ import applyPageScript from './src/unified-plugins/applyPageScript.js';
 import fixInternalLinks from './src/unified-plugins/fixInternalLinks.js';
 import applyGitHubSha from './src/unified-plugins/applyGitHubSha.js';
 import optimizeImages from './src/unified-plugins/optimizeImages.js';
-import imageTitlesToCaptions from './src/unified-plugins/imageTitlesToCaptions.js';
+import {imageTitlesToCaptions} from 'rehype-image-titles-to-captions';
 import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
 
 /**
@@ -71,7 +71,9 @@ export async function processDocument({
       assets,
       writtenAssets
     })
-    .use(imageTitlesToCaptions)
+    .use(imageTitlesToCaptions, {
+      pictureSelector: 'article picture:has(img[title])'
+    })
     .use(hashAssets, {
       pathToFile: inputFile.name,
       outputDir,
