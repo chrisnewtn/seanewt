@@ -69,6 +69,10 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
 
     const postContainer = structuredClone(articleTemplate);
 
+    if (post.data.emoji) {
+      postContainer.properties['data-emoji'] = post.data.emoji;
+    }
+
     const timeEl = select('.dt-published', postContainer);
     applyDateToTime(timeEl, post.data['date-published']);
 

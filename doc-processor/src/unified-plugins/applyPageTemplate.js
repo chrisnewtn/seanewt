@@ -117,6 +117,10 @@ export default function applyPageTemplate({
 
     const articleEl = select('article', tree);
 
+    if (file.data.matter.emoji) {
+      articleEl.properties['data-emoji'] = file.data.matter.emoji;
+    }
+
     children.forEach(el => articleEl.children.push(el));
 
     const publishedEl = select('.dt-published', tree);
