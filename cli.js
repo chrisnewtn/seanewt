@@ -6,11 +6,8 @@ import {createReadStream, createWriteStream} from 'node:fs';
 import {pipeline} from 'node:stream/promises';
 import {parseArgs} from 'node:util';
 import {processDocument} from './index.js';
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {FileCache, ensureDirectory} from './src/util.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const {
   values: {
@@ -23,12 +20,10 @@ const {
     'input-dir': {
       type: 'string',
       short: 'i',
-      default: path.resolve(__dirname, '..', '..', 'pages')
     },
     'output-dir': {
       type: 'string',
       short: 'o',
-      default: path.resolve(__dirname, '..', '..', 'public')
     },
     'skip-image-optimization': {
       type: 'boolean',
@@ -37,6 +32,13 @@ const {
     }
   }
 });
+
+if (typeof inputDir !== 'string') {
+  throw new Error('input-dir is required');
+}
+if (typeof outputDir !== 'string') {
+  throw new Error('input-dir is required');
+}
 
 const processable = new Set(['.html', '.md']);
 const isTemplate = name => name.endsWith('.template.html');
