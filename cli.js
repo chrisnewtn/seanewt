@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {minimatch} from 'minimatch';
 import fs from 'node:fs/promises';
 import {createReadStream, createWriteStream} from 'node:fs';
