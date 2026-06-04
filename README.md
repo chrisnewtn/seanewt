@@ -1,8 +1,8 @@
-# doc-processor
+# seanewt
 
-_Why add content to your website, when you can spend an afternoon doing this instead!_
+This is the site builder used to create [chrisnewtn.com](https://chrisnewtn.com).
 
-This primarily exists to ensure that assets are permanently cachable in a way that's revokable.
+It's quite specific to that one use case at the moment. Use at your own risk!
 
 ### Usage
 
