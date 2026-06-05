@@ -9,10 +9,6 @@ import {selectAll} from 'hast-util-select';
 import {findParent} from 'hast-util-find-parent';
 import {toHashedFilename} from '../util.js';
 
-/**
- * @typedef {sharp.OutputOptions | sharp.JpegOptions | sharp.PngOptions | sharp.WebpOptions | sharp.AvifOptions | sharp.HeifOptions | sharp.JxlOptions | sharp.GifOptions | sharp.Jp2Options | sharp.TiffOptions} OutputOptions
- */
-
 const mebibyte = 1024 * 1024;
 
 function toMiB(bytes) {
@@ -31,7 +27,7 @@ async function getImageInfo(buffer) {
  * @param {Object} sourceFile
  * @param {Buffer} sourceFile.buffer
  * @param {string} sourceFile.name
- * @param {OutputOptions} newFormat
+ * @param {sharp.AvailableFormatInfo} newFormat
  */
 async function convert({buffer, name}, newFormat) {
   const {data: newBuffer, info} = await sharp(buffer)
@@ -49,12 +45,16 @@ async function convert({buffer, name}, newFormat) {
 }
 
 /**
- * @param {Object} params
- * @param {string} params.pathToFile
- * @param {string} params.outputDir
- * @param {Map} params.assets
- * @param {Set} params.writtenAssets
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} OptimizeImagesOptions
+ * @property {boolean} skip Set to true to skip the optimization process.
+ * @property {string} pathToFile
+ * @property {string} outputDir The path to the output directory.
+ * @property {Map} assets A map from each original asset to its output asset.
+ * @property {Set} writtenAssets All assets already written to disk.
+ */
+
+/**
+ * @type {import('unified').Plugin<[OptimizeImagesOptions], import('hast').Root>}
  */
 export default function optimizeImages({
   skip,
@@ -114,6 +114,7 @@ export default function optimizeImages({
 
       const imageInfo = await getImageInfo(sourceBuffer);
 
+      /** @type {Awaited<ReturnType<typeof processImage>>} */
       let primaryImage = {
         buffer: sourceBuffer,
         info: imageInfo,
@@ -121,12 +122,12 @@ export default function optimizeImages({
       };
 
       // make sure the destination directory exists.
-      const destDir = path.resolve(outputDir, path.dirname(imgEl.properties.src));
+      const destDir = path.resolve(outputDir, path.dirname(imgEl.properties.src.toString()));
       console.log('mkdir -p', destDir);
       await fs.mkdir(destDir, {recursive: true});
 
       if (!skip && imageInfo.size > 1 * mebibyte) {
-        if (imageInfo.type === 'jpeg') {
+        if (imageInfo.format === 'jpeg') {
           throw new Error(`Image too large (${toMiB(imageInfo.size)}) ${pathToImage}`);
         }
 

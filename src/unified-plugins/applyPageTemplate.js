@@ -3,13 +3,19 @@ import fs from 'node:fs/promises';
 import {select} from 'hast-util-select';
 import {unified} from 'unified';
 import rehypeParse from 'rehype-parse';
-import {applyDateToTime, removeElement, selectAllLinkedElements} from './shared.js';
+import {applyDateToTime, isElement, isText, removeElement, selectAllLinkedElements} from './shared.js';
 import {h} from 'hastscript';
 
 const templateCache = new Map();
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} CorrectPathsOptions
+ * @property {string} pathToFile
+ * @property {string} pathToTemplate
+ */
+
+/**
+ * @type {import('unified').Plugin<[CorrectPathsOptions], import('hast').Root>}
  */
 function correctPaths({
   pathToFile,
@@ -29,7 +35,13 @@ function correctPaths({
 }
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} ApplyPageTitleOptions
+ * @property {string} pathToTemplate
+ * @property {string} title
+ */
+
+/**
+ * @type {import('unified').Plugin<[ApplyPageTitleOptions], import('hast').Root>}
  */
 function applyPageTitle({
   pathToTemplate,
@@ -53,7 +65,13 @@ function applyPageTitle({
 }
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} ApplyPageDescriptionOptions
+ * @property {string} pathToTemplate
+ * @property {string} description
+ */
+
+/**
+ * @type {import('unified').Plugin<[ApplyPageDescriptionOptions], import('hast').Root>}
  */
 function applyPageDescription({
   pathToTemplate,
@@ -71,13 +89,29 @@ function applyPageDescription({
 }
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @param {unknown} matter
+ * @returns {matter is Record<string, string>}
+ */
+function isFrontmatter(matter) {
+  return typeof matter === 'object' && matter !== null;
+}
+
+/**
+ * @typedef {Object} ApplyPageTemplateOptions
+ * @property {string} pathToFile
+ */
+
+/**
+ * @type {import('unified').Plugin<[ApplyPageTemplateOptions], import('hast').Root>}
  */
 export default function applyPageTemplate({
   pathToFile
 }) {
-
   return async (tree, file) => {
+    if (!isFrontmatter(file.data.matter)) {
+      throw new Error(`No frontmatter found for "${pathToFile}"`);
+    }
+
     const {
       title,
       template,
@@ -121,7 +155,11 @@ export default function applyPageTemplate({
       articleEl.properties['data-emoji'] = file.data.matter.emoji;
     }
 
-    children.forEach(el => articleEl.children.push(el));
+    children.forEach(el => {
+      if (isElement(el) || isText(el)) {
+        articleEl.children.push(el);
+      }
+    });
 
     const publishedEl = select('.dt-published', tree);
     applyDateToTime(publishedEl, datePublished);

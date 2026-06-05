@@ -1,6 +1,13 @@
 import {selectAll} from 'hast-util-select';
 
 /**
+ * @typedef {import('unist').Node} Node
+ * @typedef {import('hast').Text} Text
+ * @typedef {import('hast').Element} Element
+ * @typedef {import('hast').Parent} Parent
+ */
+
+/**
  * @param {import('hast').Element} timeEl
  * @param {string} date
  */
@@ -18,9 +25,37 @@ export function applyDateToTime(timeEl, date) {
 }
 
 /**
+ * @param {unknown} node The node to test.
+ * @returns {node is Node}
+ */
+function isNode(node) {
+  return typeof node === 'object'
+    && node !== null
+    && Object.hasOwn(node, 'type');
+}
+
+/**
+ * Returns `true` if the passed `node` is an {@link Element}.
+ * @param {Node} node The node to test.
+ * @returns {node is Element}
+ */
+export function isElement(node) {
+  return isNode(node) && node.type === 'element';
+}
+
+/**
+ * Returns `true` if the passed `node` is {@link Text}.
+ * @param {Node} node The node to test.
+ * @returns {node is Text}
+ */
+export function isText(node) {
+  return isNode(node) && node.type === 'text';
+}
+
+/**
  *
- * @param {import('hast').Element} elementToRemove
- * @param {import('hast').Element} tree
+ * @param {Element} elementToRemove
+ * @param {Parent} tree
  */
 export function removeElement(elementToRemove, tree) {
   for (const element of tree.children) {
@@ -31,7 +66,7 @@ export function removeElement(elementToRemove, tree) {
       );
       return true;
     }
-    if (Array.isArray(element.children) && element.children.length > 0) {
+    if (isElement(element) && element.children.length > 0) {
       if (removeElement(elementToRemove, element)) {
         return true;
       }

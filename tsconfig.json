@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "module": "es2022",
+    "target": "es2025"
+  }
+}

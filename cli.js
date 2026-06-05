@@ -49,7 +49,7 @@ const writtenAssets = new Set();
 
 /**
  * @param {string} pathToDir
- * @param {Dirent} inputFile
+ * @param {import("node:fs").Dirent} inputFile
  */
 async function processFile(pathToDir, inputFile) {
   const ext = path.extname(inputFile.name);
@@ -107,7 +107,7 @@ const toCopy = [
 
 /**
  * @param {string} pathToDir
- * @param {Dirent} inputFile
+ * @param {import("node:fs").Dirent} inputFile
  */
 async function copyFile(pathToDir, inputFile) {
   const pathToInput = path.join(pathToDir, inputFile.name);

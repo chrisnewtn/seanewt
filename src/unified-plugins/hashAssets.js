@@ -5,7 +5,14 @@ import {selectAllAssetElements} from './shared.js';
 const hashPattern = /-[a-z|\d]{7}\.[\w]{3,4}$/;
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} HashCssOptions
+ * @property {string} pathToFile
+ * @property {string} outputDir
+ * @property {Map<string, string>} assets
+ */
+
+/**
+ * @type {import('unified').Plugin<[HashCssOptions], import('hast').Root>}
  */
 export default function hashCss({
   pathToFile,

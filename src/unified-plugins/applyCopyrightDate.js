@@ -1,9 +1,14 @@
 import {select} from 'hast-util-select';
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} ApplyCopyrightDateOptions
+ * @property {string} startYear
  */
-export default function applyCopyrightDate({startYear} = {}) {
+
+/**
+ * @type {import('unified').Plugin<[ApplyCopyrightDateOptions], import('hast').Root>}
+ */
+export default function applyCopyrightDate({startYear}) {
   return async tree => {
     const el = select('#copyright-date', tree);
 

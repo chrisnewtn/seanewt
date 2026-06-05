@@ -25,6 +25,9 @@ import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
  * @param {string} params.inputFile.text
  * @param {string} params.outputDir
  * @param {import('./src/util.js').FileCache} params.fileCache
+ * @param {Map<string, string>} params.assets
+ * @param {boolean} params.skipImageOptimization
+ * @param {Set<string>} params.writtenAssets
  */
 export async function processDocument({
   inputFile,
@@ -50,8 +53,6 @@ export async function processDocument({
       .use(remarkRehype)
       .use(applyPageTemplate, {
         pathToFile: inputFile.name,
-        outputDir,
-        assets
       });
   }
 
@@ -60,10 +61,7 @@ export async function processDocument({
       pathToFile: inputFile.name,
       fileCache
     })
-    .use(fixInternalLinks, {
-      pathToFile: inputFile.name,
-      fileCache
-    })
+    .use(fixInternalLinks)
     .use(optimizeImages, {
       skip: skipImageOptimization,
       pathToFile: inputFile.name,

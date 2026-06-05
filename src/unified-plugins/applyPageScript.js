@@ -9,7 +9,13 @@ const fileToScript = new Map([
 ]);
 
 /**
- * @type {import('unified').Plugin<[], import('hast').Root>}
+ * @typedef {Object} ApplyPageScriptOptions
+ * @property {string} pathToFile
+ * @property {import('../util.js').FileCache} fileCache
+ */
+
+/**
+ * @type {import('unified').Plugin<[ApplyPageScriptOptions], import('hast').Root>}
  */
 export default function applyPageScript({
   pathToFile,
