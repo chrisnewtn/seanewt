@@ -126,7 +126,7 @@ export default function optimizeImages({
       console.log('mkdir -p', destDir);
       await fs.mkdir(destDir, {recursive: true});
 
-      if (!skip && imageInfo.size > 1 * mebibyte) {
+      if (!skip && imageInfo.size > 1.1 * mebibyte) {
         if (imageInfo.format === 'jpeg') {
           throw new Error(`Image too large (${toMiB(imageInfo.size)}) ${pathToImage}`);
         }
