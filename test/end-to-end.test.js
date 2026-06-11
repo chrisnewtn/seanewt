@@ -11,27 +11,48 @@ import { toText } from 'hast-util-to-text';
 
 const __dirname = import.meta.dirname;
 const pathToOutput = path.join(__dirname, 'output');
-const pathToPosts = path.join(pathToOutput, 'posts');
 
-const filesToTest = [
-  path.join(pathToOutput, 'index.html'),
-  path.join(pathToPosts, 'index.html'),
-  path.join(pathToPosts, '2026-06-11-example.html'),
-];
+/**
+ * @typedef {typeof filesToTest} TF
+ */
+/**
+ * @typedef {TF[0] | TF[1] | TF[2] | TF[3]} TestFile
+ */
+
+const filesToTest = Object.freeze(/** @type {const} */ ([
+  'index.html',
+  'posts/index.html',
+  'posts/2026-06-11-example.html',
+  'posts/2026-06-11-other.html',
+]));
 
 const exec = promisify(childProcess.exec);
 
 /** @type Map<string, import("hast").Root> */
 const fileCache = new Map();
 
-/** @param {string} pathToFile */
-async function parseDoc(pathToFile) {
-  if (fileCache.has(pathToFile)) {
-    return fileCache.get(pathToFile);
+const titles = /** @type {const} */ Object.freeze({
+  'index.html': 'Some Guy',
+  'posts/index.html': 'Posts',
+  'posts/2026-06-11-example.html': 'Example',
+  'posts/2026-06-11-other.html': 'Other post',
+});
+
+const descriptions = /** @type {const} */ Object.freeze({
+  'index.html': 'The personal website of Some Guy.',
+  'posts/index.html': 'These are my posts.',
+  'posts/2026-06-11-example.html': 'Post description',
+  'posts/2026-06-11-other.html': 'Other post description',
+});
+
+/** @param {TestFile} file */
+async function parseDoc(file) {
+  if (fileCache.has(file)) {
+    return fileCache.get(file);
   }
-  const text = await readFile(pathToFile, 'utf8');
+  const text = await readFile(path.join(pathToOutput, file), 'utf8');
   const tree = unified().use(rehypeParse).parse(text);
-  fileCache.set(pathToFile, tree);
+  fileCache.set(file, tree);
   return tree;
 }
 
@@ -53,9 +74,9 @@ describe('end-to-end', () => {
     await stat(pathToOutput);
   });
 
-  filesToTest.forEach(file => describe(path.relative(__dirname, file), () => {
+  filesToTest.forEach(file => describe(file, () => {
     it("writes the file to disk", async () => {
-      await stat(file);
+      await stat(path.join(pathToOutput, file));
     });
 
     it('overwrites copyright to current year', async () => {
@@ -109,6 +130,23 @@ describe('end-to-end', () => {
       assert.ok(node);
       assert.ok(typeof node.properties.srcSet === 'string');
       assert.match(node.properties.srcSet, /github-mark-white-fab00c2.svg$/);
+    });
+
+    it('sets the page title', async () => {
+      const tree = await parseDoc(file);
+      const node = select('title', tree);
+
+      assert.ok(node);
+      assert.equal(toText(node), titles[file]);
+    });
+
+    it('sets the page description', async () => {
+      const tree = await parseDoc(file);
+      const node = select('meta[name=description]', tree);
+
+      assert.ok(node);
+      assert.ok(typeof node.properties.content === 'string');
+      assert.equal(node.properties.content, descriptions[file]);
     });
   }));
 });
