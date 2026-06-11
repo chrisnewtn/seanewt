@@ -6,10 +6,20 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "check": "tsc",
+    "prepack": "npm run check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Chris Newton <me@chrisnewtn.com> (https://chrisnewtn.com)",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/chrisnewtn/seanewt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chrisnewtn/seanewt/issues"
+  },
+  "homepage": "https://github.com/chrisnewtn/seanewt#readme",
   "dependencies": {
     "hast-util-find-parent": "^1.0.2",
     "hast-util-select": "^6.0.2",

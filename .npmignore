@@ -1,0 +1,6 @@
+*.test.js
+tsconfig.json
+eslint.config.js
+.editorconfig
+.github
+*.tgz
