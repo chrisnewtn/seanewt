@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../assets/newt.svg">
+  <title>Posts</title>
+  <meta name="description" content="These are my posts.">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header role="banner" class="site-wide">
+    <div class="banner">
+      <h1 class="logo">Chris Newton</h1>
+      <a aria-label="GitHub profile" href="https://github.com/chrisnewtn" rel="me">
+        <picture class="social">
+          <source srcset="../assets/github-mark-white.svg" media="(prefers-color-scheme: dark)">
+          <img src="../assets/github-mark.svg" alt="The GitHub Octocat logo">
+        </picture>
+      </a>
+    </div>
+  </header>
+  <nav aria-label="Main">
+    <ul>
+      <li><a href="../index.html">About</a></li>
+      <li>Posts</li>
+    </ul>
+  </nav>
+  <main class="posts">
+    <template id="post-snippet">
+      <article class="snippet">
+        <p class="publishing-dates">
+          <small>Published <time class="dt-published"></time>.</small>
+        </p>
+      </article>
+    </template>
+  </main>
+  <footer>
+    <p><small>Example Copyright <span id="copyright-date">2024-2025</span> Chris Newton. Published commit: <a id="github-sha" title="View on GitHub" href="https://github.com/chrisnewtn/chrisnewtn.github.io/commit/GITHUB_SHA">GITHUB_SHA</a>.</small></p>
+  </footer>
+</body>
+</html>

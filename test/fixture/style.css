@@ -1,0 +1,14 @@
+@font-face {
+  font-family: 'Noto Mono';
+  font-display: swap;
+  src: local('Noto Mono'), url('assets/NotoSansMono-VariableFont_wdth,wght.ttf') format('truetype');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100vh;
+}
