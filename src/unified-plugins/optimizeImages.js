@@ -11,6 +11,7 @@ import {toHashedFilename} from '../util.js';
 
 const mebibyte = 1024 * 1024;
 
+/** @param {number} bytes */
 function toMiB(bytes) {
   return `${(bytes / mebibyte).toFixed(4)} MiB`;
 }
@@ -24,14 +25,21 @@ async function getImageInfo(buffer) {
 }
 
 /**
+ * @typedef {{id: 'jpeg'} & sharp.JpegOptions} JpegOptions
+ * @typedef {{id: 'avif'} & sharp.AvifOptions} AvifOptions
+ * @typedef {{id: 'webp'} & sharp.WebpOptions} WebpOptions
+ * @typedef {JpegOptions | AvifOptions | WebpOptions} FormatOptions
+ */
+
+/**
  * @param {Object} sourceFile
  * @param {Buffer} sourceFile.buffer
  * @param {string} sourceFile.name
- * @param {sharp.AvailableFormatInfo} newFormat
+ * @param {FormatOptions} newFormat
  */
-async function convert({buffer, name}, newFormat) {
+async function convert({buffer, name}, {id, ...options}) {
   const {data: newBuffer, info} = await sharp(buffer)
-    .toFormat(newFormat)
+    .toFormat(id, options)
     .toBuffer({resolveWithObject: true});
 
   const hash = createHash('sha256');
@@ -40,7 +48,7 @@ async function convert({buffer, name}, newFormat) {
   return {
     buffer: newBuffer,
     info,
-    name: toHashedFilename(name, hash.digest('hex'), `.${newFormat.id}`)
+    name: toHashedFilename(name, hash.digest('hex'), `.${id}`)
   };
 }
 
@@ -63,10 +71,17 @@ export default function optimizeImages({
   assets,
   writtenAssets
 }) {
+  /** @param {string} src */
   function toDiskPath(src) {
     return path.resolve(path.dirname(pathToFile), src);
   }
 
+  /**
+   * Converts are writes the passed image to the `destFormat`.
+   * @param {string} src
+   * @param {Buffer<ArrayBuffer>} srcBuffer
+   * @param {FormatOptions} destFormat
+   */
   async function processImage(src, srcBuffer, destFormat) {
     console.log(`convert to ${destFormat.id}`, toDiskPath(src));
 
@@ -97,6 +112,9 @@ export default function optimizeImages({
 
   return async tree => {
     for (const imgEl of selectAll('main img', tree)) {
+      if (typeof imgEl.properties.src !== 'string') {
+        throw new Error(`Image on page ${pathToFile} has no src property.`);
+      }
       const pathToImage = toDiskPath(imgEl.properties.src);
       const parentEl = findParent(imgEl, tree);
 
@@ -159,7 +177,7 @@ export default function optimizeImages({
       if (!skip && imageInfo.format !== 'avif') {
         const avifImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'avif',
-          lossless: true
+          lossless: false
         });
 
         additionalFormats.push(h('source', {
@@ -171,7 +189,7 @@ export default function optimizeImages({
       if (!skip && imageInfo.format !== 'webp') {
         const webpImage = await processImage(imgEl.properties.src, sourceBuffer, {
           id: 'webp',
-          lossless: true
+          lossless: false
         });
 
         additionalFormats.push(h('source', {
