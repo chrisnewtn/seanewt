@@ -11,7 +11,7 @@
     "test": "node --test"
   },
   "author": "Chris Newton <me@chrisnewtn.com> (https://chrisnewtn.com)",
-  "license": "ISC",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/chrisnewtn/seanewt.git"
