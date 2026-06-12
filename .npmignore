@@ -4,3 +4,4 @@ eslint.config.js
 .editorconfig
 .github
 *.tgz
+test
