@@ -6,7 +6,7 @@ import { readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { unified } from 'unified';
 import rehypeParse from 'rehype-parse';
-import { select } from 'hast-util-select';
+import { select, selectAll } from 'hast-util-select';
 import { toText } from 'hast-util-to-text';
 
 const __dirname = import.meta.dirname;
@@ -23,7 +23,7 @@ const filesToTest = Object.freeze(/** @type {const} */ ([
   'index.html',
   'posts/index.html',
   'posts/2026-06-11-example.html',
-  'posts/2026-06-11-other.html',
+  'posts/2026-06-12-other.html',
 ]));
 
 const exec = promisify(childProcess.exec);
@@ -35,19 +35,19 @@ const titles = /** @type {const} */ Object.freeze({
   'index.html': 'Some Guy',
   'posts/index.html': 'Posts',
   'posts/2026-06-11-example.html': 'Example',
-  'posts/2026-06-11-other.html': 'Other post',
+  'posts/2026-06-12-other.html': 'Other post',
 });
 
 const descriptions = /** @type {const} */ Object.freeze({
   'index.html': 'The personal website of Some Guy.',
   'posts/index.html': 'These are my posts.',
   'posts/2026-06-11-example.html': 'Post description',
-  'posts/2026-06-11-other.html': 'Other post description',
+  'posts/2026-06-12-other.html': 'Other post description',
 });
 
 const emojis = /** @type {const} */ Object.freeze({
   'posts/2026-06-11-example.html': '📝',
-  'posts/2026-06-11-other.html': '🐧',
+  'posts/2026-06-12-other.html': '🐧',
 });
 
 const createdDates = /** @type {const} */ Object.freeze({
@@ -55,16 +55,16 @@ const createdDates = /** @type {const} */ Object.freeze({
     datetime: '2026-06-11',
     text: 'Thursday, 11 June 2026'
   },
-  'posts/2026-06-11-other.html': {
-    datetime: '2026-06-11',
-    text: 'Thursday, 11 June 2026'
+  'posts/2026-06-12-other.html': {
+    datetime: '2026-06-12',
+    text: 'Friday, 12 June 2026'
   },
 });
 
 const updatedDates = /** @type {const} */ Object.freeze({
-  'posts/2026-06-11-other.html': {
-    datetime: '2026-06-12',
-    text: 'Friday, 12 June 2026'
+  'posts/2026-06-12-other.html': {
+    datetime: '2026-06-13',
+    text: 'Saturday, 13 June 2026'
   },
 });
 
@@ -171,6 +171,74 @@ describe('end-to-end', () => {
       assert.ok(typeof node.properties.content === 'string');
       assert.equal(node.properties.content, descriptions[file]);
     });
+
+    if (file === 'posts/index.html') {
+      it('lists all published posts', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('article.snippet', tree);
+
+        assert.ok(nodes);
+        assert.equal(nodes.length, 2, 'Expected 2 posts');
+      });
+
+      it('lists posts ordered by most recent first', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('article.snippet', tree);
+
+        assert.deepEqual(
+          [
+            select('time', nodes[0]).properties.dateTime,
+            select('time', nodes[1]).properties.dateTime,
+          ],
+          [
+            '2026-06-12',
+            '2026-06-11',
+          ]
+        );
+      });
+
+      it('writes the heading of each post', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('article.snippet', tree);
+
+        assert.deepEqual(
+          [
+            toText(select('h1', nodes[0])),
+            toText(select('h1', nodes[1])),
+          ],
+          [
+            'Other post',
+            'Example',
+          ],
+        );
+      });
+
+      it('writes only the first paragraph of each post', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('article.snippet', tree);
+
+        const post1Paras = selectAll('p', nodes[0]);
+        const post2Paras = selectAll('p', nodes[1]);
+
+        assert.equal(post1Paras.length + post2Paras.length, 6);
+
+        assert.equal(toText(post1Paras[1]), 'Here\'s another post!');
+        assert.equal(toText(post2Paras[1]), 'So, I figure I\'m going to start posting to this website. Why not.');
+      });
+
+      it('renders a "Read full post" link', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('article.snippet', tree);
+
+        const post1Link = select('a', nodes[0]);
+        const post2Link = select('a', nodes[1]);
+
+        assert.equal(toText(post1Link), 'Read full post');
+        assert.equal(toText(post2Link), 'Read full post');
+        assert.equal(post1Link.properties.href, '2026-06-12-other.html');
+        assert.equal(post2Link.properties.href, '2026-06-11-example.html');
+      });
+    }
 
     if (emojis[file]) {
       it('sets the post\'s emoji on article[data-emoji]', async () => {

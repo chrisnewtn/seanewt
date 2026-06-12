@@ -20,6 +20,7 @@ import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
 /**
  * Applies HTML formatting and cache-busts the CSS of a given HTML file.
  * @param {Object} params
+ * @param {string} params.rootInputDir
  * @param {Object} params.inputFile
  * @param {string} params.inputFile.name
  * @param {string} params.inputFile.text
@@ -30,6 +31,7 @@ import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
  * @param {Set<string>} params.writtenAssets
  */
 export async function processDocument({
+  rootInputDir,
   inputFile,
   outputDir,
   fileCache,
@@ -59,6 +61,7 @@ export async function processDocument({
   return await processor
     .use(applyPageScript, {
       pathToFile: inputFile.name,
+      rootInputDir,
       fileCache
     })
     .use(fixInternalLinks)

@@ -61,6 +61,7 @@ async function processFile(pathToDir, inputFile) {
   const fileContents = await fileCache.get(pathToInput);
 
   const vFile = await processDocument({
+    rootInputDir: inputDir,
     inputFile: {
       name: pathToInput,
       text: fileContents
