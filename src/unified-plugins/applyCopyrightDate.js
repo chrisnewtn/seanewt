@@ -2,7 +2,7 @@ import {select} from 'hast-util-select';
 
 /**
  * @typedef {Object} ApplyCopyrightDateOptions
- * @property {string} startYear
+ * @property {number} [startYear]
  */
 
 /**
@@ -10,6 +10,9 @@ import {select} from 'hast-util-select';
  */
 export default function applyCopyrightDate({startYear}) {
   return async tree => {
+    if (typeof startYear !== 'number') {
+      return;
+    }
     const el = select('#copyright-date', tree);
 
     if (!el || !startYear) {

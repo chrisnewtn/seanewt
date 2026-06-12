@@ -8,6 +8,7 @@ import sharp from 'sharp';
 import {selectAll} from 'hast-util-select';
 import {findParent} from 'hast-util-find-parent';
 import {toHashedFilename} from '../util.js';
+import { isParent } from './shared.js';
 
 const mebibyte = 1024 * 1024;
 
@@ -117,6 +118,10 @@ export default function optimizeImages({
       }
       const pathToImage = toDiskPath(imgEl.properties.src);
       const parentEl = findParent(imgEl, tree);
+
+      if (!isParent(parentEl)) {
+        throw new Error(`Image on page ${pathToFile} has no parent element.`);
+      }
 
       // read in the original file and compute its hash.
       const hash = createHash('sha256');

@@ -32,12 +32,13 @@ export default function hashCss({
       }
 
       const pathToAsset = path.resolve(pathToDir, pathPart);
+      const pathToNewAsset = assets.get(pathToAsset);
       let newName;
 
       // The file has been hashed, but not updated in the DOM yet.
       // Update the DOM, but don't bother rehashing the file.
-      if (assets.has(pathToAsset)) {
-        newName = path.relative(outputDir, assets.get(pathToAsset));
+      if (typeof pathToNewAsset === 'string') {
+        newName = path.relative(outputDir, pathToNewAsset);
       } else {
         const hash = await shasum(pathToAsset);
         newName = toHashedFilename(pathPart, hash);

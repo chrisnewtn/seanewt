@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/chrisnewtn/seanewt#readme",
   "dependencies": {
+    "ajv": "^8.20.0",
     "hast-util-find-parent": "^1.0.2",
     "hast-util-select": "^6.0.2",
     "hastscript": "^9.0.0",

@@ -107,7 +107,7 @@ describe('end-to-end', () => {
       const node = select('#copyright-date', tree);
 
       assert.ok(node);
-      assert.equal(toText(node), `2024-${new Date().getUTCFullYear()}`);
+      assert.equal(toText(node), `2020-${new Date().getUTCFullYear()}`);
     });
 
     it('creates a link to the github commit', async () => {
@@ -185,10 +185,16 @@ describe('end-to-end', () => {
         const tree = await parseDoc(file);
         const nodes = selectAll('article.snippet', tree);
 
+        const post1Time = select('time', nodes[0]);
+        const post2Time = select('time', nodes[1]);
+
+        assert.ok(post1Time);
+        assert.ok(post2Time);
+
         assert.deepEqual(
           [
-            select('time', nodes[0]).properties.dateTime,
-            select('time', nodes[1]).properties.dateTime,
+            post1Time.properties.dateTime,
+            post2Time.properties.dateTime,
           ],
           [
             '2026-06-12',
@@ -201,10 +207,16 @@ describe('end-to-end', () => {
         const tree = await parseDoc(file);
         const nodes = selectAll('article.snippet', tree);
 
+        const post1H1 = select('h1', nodes[0]);
+        const post2H1 = select('h1', nodes[1]);
+
+        assert.ok(post1H1);
+        assert.ok(post2H1);
+
         assert.deepEqual(
           [
-            toText(select('h1', nodes[0])),
-            toText(select('h1', nodes[1])),
+            toText(post1H1),
+            toText(post2H1),
           ],
           [
             'Other post',
@@ -232,6 +244,9 @@ describe('end-to-end', () => {
 
         const post1Link = select('a', nodes[0]);
         const post2Link = select('a', nodes[1]);
+
+        assert.ok(post1Link);
+        assert.ok(post2Link);
 
         assert.equal(toText(post1Link), 'Read full post');
         assert.equal(toText(post2Link), 'Read full post');

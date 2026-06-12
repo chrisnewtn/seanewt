@@ -55,6 +55,10 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
 
   const articleTemplate = select('article', baseTemplate.content);
 
+  if (typeof articleTemplate === 'undefined') {
+    throw new Error(`No <article> found in base template in ${pathToFile}`);
+  }
+
   removeElement(baseTemplate, tree);
 
   const snippets = [];
@@ -74,11 +78,26 @@ export default async function collatePosts({pathToFile, fileCache, tree}) {
     }
 
     const timeEl = select('.dt-published', postContainer);
-    applyDateToTime(timeEl, post.data['date-published']);
+
+    if (timeEl) {
+      applyDateToTime(timeEl, post.data['date-published']);
+    }
+
+    /** @type {Array<import('hast').Element>} */
+    const postElements = [];
+
+    const postH1 = select('h1', post.tree);
+    const postPara = select('p', post.tree);
+
+    if (postH1) {
+      postElements.push(postH1);
+    }
+    if (postPara) {
+      postElements.push(postPara);
+    }
 
     postContainer.children.push(
-      select('h1', post.tree),
-      select('p', post.tree),
+      ...postElements,
       // TODO: shouldn't this link be defined in the template?
       h('p', [
         h('a', {href: postFile.name.replace('.md', '.html')}, 'Read full post')
