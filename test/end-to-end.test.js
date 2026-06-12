@@ -75,7 +75,7 @@ describe('end-to-end', () => {
   });
 
   filesToTest.forEach(file => describe(file, () => {
-    it("writes the file to disk", async () => {
+    it('writes the file to disk', async () => {
       await stat(path.join(pathToOutput, file));
     });
 
