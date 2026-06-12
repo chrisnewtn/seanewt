@@ -50,6 +50,24 @@ const emojis = /** @type {const} */ Object.freeze({
   'posts/2026-06-11-other.html': '🐧',
 });
 
+const createdDates = /** @type {const} */ Object.freeze({
+  'posts/2026-06-11-example.html': {
+    datetime: '2026-06-11',
+    text: 'Thursday, 11 June 2026'
+  },
+  'posts/2026-06-11-other.html': {
+    datetime: '2026-06-11',
+    text: 'Thursday, 11 June 2026'
+  },
+});
+
+const updatedDates = /** @type {const} */ Object.freeze({
+  'posts/2026-06-11-other.html': {
+    datetime: '2026-06-12',
+    text: 'Friday, 12 June 2026'
+  },
+});
+
 /** @param {TestFile} file */
 async function parseDoc(file) {
   if (fileCache.has(file)) {
@@ -162,6 +180,30 @@ describe('end-to-end', () => {
         assert.ok(node);
         assert.ok(typeof node.properties.dataEmoji === 'string');
         assert.equal(node.properties.dataEmoji, emojis[file]);
+      });
+    }
+
+    if (createdDates[file]) {
+      it('sets the post\'s published date', async () => {
+        const tree = await parseDoc(file);
+        const node = select('.dt-published', tree);
+
+        assert.ok(node);
+        assert.ok(typeof node.properties.dateTime === 'string');
+        assert.equal(node.properties.dateTime, createdDates[file].datetime);
+        assert.equal(toText(node), createdDates[file].text);
+      });
+    }
+
+    if (updatedDates[file]) {
+      it('sets the post\'s updated date', async () => {
+        const tree = await parseDoc(file);
+        const node = select('.dt-updated', tree);
+
+        assert.ok(node);
+        assert.ok(typeof node.properties.dateTime === 'string');
+        assert.equal(node.properties.dateTime, updatedDates[file].datetime);
+        assert.equal(toText(node), updatedDates[file].text);
       });
     }
   }));
