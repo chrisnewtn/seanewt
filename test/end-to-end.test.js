@@ -45,6 +45,11 @@ const descriptions = /** @type {const} */ Object.freeze({
   'posts/2026-06-11-other.html': 'Other post description',
 });
 
+const emojis = /** @type {const} */ Object.freeze({
+  'posts/2026-06-11-example.html': '📝',
+  'posts/2026-06-11-other.html': '🐧',
+});
+
 /** @param {TestFile} file */
 async function parseDoc(file) {
   if (fileCache.has(file)) {
@@ -148,5 +153,16 @@ describe('end-to-end', () => {
       assert.ok(typeof node.properties.content === 'string');
       assert.equal(node.properties.content, descriptions[file]);
     });
+
+    if (emojis[file]) {
+      it('sets the post\'s emoji on article[data-emoji]', async () => {
+        const tree = await parseDoc(file);
+        const node = select('article[data-emoji]', tree);
+
+        assert.ok(node);
+        assert.ok(typeof node.properties.dataEmoji === 'string');
+        assert.equal(node.properties.dataEmoji, emojis[file]);
+      });
+    }
   }));
 });
