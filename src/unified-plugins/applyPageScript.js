@@ -1,12 +1,14 @@
+import path from 'node:path';
 import collatePosts from '../page-scripts/collatePosts.js';
 
 const fileToScript = new Map([
-  ['pages/posts/index.html', collatePosts]
+  ['posts/index.html', collatePosts]
 ]);
 
 /**
  * @typedef {Object} ApplyPageScriptOptions
  * @property {string} pathToFile
+ * @property {string} rootInputDir
  * @property {import('../util.js').FileCache} fileCache
  */
 
@@ -15,11 +17,14 @@ const fileToScript = new Map([
  */
 export default function applyPageScript({
   pathToFile,
+  rootInputDir,
   fileCache
 }) {
   return async tree => {
-    if (fileToScript.has(pathToFile)) {
-      await fileToScript.get(pathToFile)({
+    const fileToScriptKey = path.relative(rootInputDir, pathToFile);
+
+    if (fileToScript.has(fileToScriptKey)) {
+      await fileToScript.get(fileToScriptKey)({
         pathToFile,
         fileCache,
         tree
