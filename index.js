@@ -29,6 +29,7 @@ import applyCopyrightDate from './src/unified-plugins/applyCopyrightDate.js';
  * @param {Map<string, string>} params.assets
  * @param {boolean} params.skipImageOptimization
  * @param {Set<string>} params.writtenAssets
+ * @param {import('./src/configParser.js').Config} params.config
  */
 export async function processDocument({
   rootInputDir,
@@ -37,7 +38,8 @@ export async function processDocument({
   fileCache,
   assets = new Map(),
   skipImageOptimization,
-  writtenAssets
+  writtenAssets,
+  config,
 }) {
   const ext = path.extname(inputFile.name);
   const processor = unified();
@@ -81,7 +83,7 @@ export async function processDocument({
       assets
     })
     .use(applyCopyrightDate, {
-      startYear: '2024'
+      startYear: config.copyrightStart,
     })
     .use(applyGitHubSha)
     .use(rehypeFormat, {

@@ -141,7 +141,7 @@ export default function applyPageTemplate({
 
     const {children} = tree;
 
-    delete tree.children;
+    // delete tree.children;
     delete tree.position;
 
     Object.assign(tree, templateTree);
@@ -150,6 +150,10 @@ export default function applyPageTemplate({
     // use case for now, it's staying here.
 
     const articleEl = select('article', tree);
+
+    if (typeof articleEl === 'undefined') {
+      throw new Error(`No <article> found in ${pathToFile}`);
+    }
 
     if (file.data.matter.emoji) {
       articleEl.properties['data-emoji'] = file.data.matter.emoji;
@@ -162,13 +166,27 @@ export default function applyPageTemplate({
     });
 
     const publishedEl = select('.dt-published', tree);
+
+    if (typeof publishedEl === 'undefined') {
+      throw new Error(`No .dt-published found in ${pathToFile}`);
+    }
+
     applyDateToTime(publishedEl, datePublished);
 
     if (dateUpdated) {
       const updatedEl = select('.dt-updated', tree);
+
+      if (typeof updatedEl === 'undefined') {
+        throw new Error(`No .dt-updated found in ${pathToFile}`);
+      }
+
       applyDateToTime(updatedEl, dateUpdated);
     } else {
-      removeElement(select('.updated', tree), tree);
+      const updatedEl = select('.updated', tree);
+
+      if (updatedEl) {
+        removeElement(updatedEl, tree);
+      }
     }
   };
 }

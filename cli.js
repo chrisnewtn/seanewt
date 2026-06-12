@@ -8,6 +8,7 @@ import {parseArgs} from 'node:util';
 import {processDocument} from './index.js';
 import path from 'node:path';
 import {FileCache, ensureDirectory} from './src/util.js';
+import {tryGetConfig} from './src/configParser.js';
 
 const {
   values: {
@@ -40,6 +41,8 @@ if (typeof outputDir !== 'string') {
   throw new Error('input-dir is required');
 }
 
+const config = await tryGetConfig(inputDir);
+
 const processable = new Set(['.html', '.md']);
 const isTemplate = name => name.endsWith('.template.html');
 
@@ -48,20 +51,40 @@ const assets = new Map();
 const writtenAssets = new Set();
 
 /**
- * @param {string} pathToDir
- * @param {import("node:fs").Dirent} inputFile
+ * @typedef {{
+ *  inputDir: string
+ *  rootInputDir: string
+ *  outputDir: string
+ *  config: import('./src/configParser.js').Config
+ * }} DirProcessingConfig
  */
-async function processFile(pathToDir, inputFile) {
+
+/**
+ * @typedef {{
+ *  inputFile: import('node:fs').Dirent<string>
+ * } & DirProcessingConfig} ProcessingOptions
+ */
+
+/**
+ * @param {ProcessingOptions} options
+ */
+async function processFile({
+  inputDir,
+  rootInputDir,
+  inputFile,
+  outputDir,
+  config,
+}) {
   const ext = path.extname(inputFile.name);
 
-  const pathToInput = path.join(pathToDir, inputFile.name);
-  const pathToOutputDir = path.join(outputDir, path.relative(inputDir, pathToDir));
+  const pathToInput = path.join(inputDir, inputFile.name);
+  const pathToOutputDir = path.join(outputDir, path.relative(rootInputDir, inputDir));
 
   console.log('processing', pathToInput);
   const fileContents = await fileCache.get(pathToInput);
 
   const vFile = await processDocument({
-    rootInputDir: inputDir,
+    rootInputDir,
     inputFile: {
       name: pathToInput,
       text: fileContents
@@ -70,7 +93,8 @@ async function processFile(pathToDir, inputFile) {
     skipImageOptimization,
     fileCache,
     writtenAssets,
-    outputDir: pathToOutputDir
+    outputDir: pathToOutputDir,
+    config,
   });
 
   await ensureDirectory(pathToOutputDir);
@@ -107,12 +131,11 @@ const toCopy = [
 ];
 
 /**
- * @param {string} pathToDir
- * @param {import("node:fs").Dirent} inputFile
+ * @param {ProcessingOptions} options
  */
-async function copyFile(pathToDir, inputFile) {
-  const pathToInput = path.join(pathToDir, inputFile.name);
-  const relativeToInput = path.relative(inputDir, pathToInput);
+async function copyFile({inputDir, rootInputDir, inputFile, outputDir}) {
+  const pathToInput = path.join(inputDir, inputFile.name);
+  const relativeToInput = path.relative(rootInputDir, pathToInput);
 
   const copyable = toCopy.some(glob => minimatch(relativeToInput, glob));
 
@@ -120,7 +143,7 @@ async function copyFile(pathToDir, inputFile) {
     return;
   }
 
-  const pathToOutputDir = path.join(outputDir, path.relative(inputDir, pathToDir));
+  const pathToOutputDir = path.join(outputDir, path.relative(rootInputDir, inputDir));
 
   await ensureDirectory(pathToOutputDir);
 
@@ -130,21 +153,51 @@ async function copyFile(pathToDir, inputFile) {
   await fs.copyFile(pathToInput, pathToOutput);
 }
 
-async function processDirectory(pathToDir) {
-  for (const inputFile of await fs.readdir(pathToDir, {withFileTypes: true})) {
+/**
+ * @param {DirProcessingConfig} options
+ */
+async function processDirectory({
+  inputDir,
+  rootInputDir,
+  outputDir,
+  config,
+}) {
+  for (const inputFile of await fs.readdir(inputDir, {withFileTypes: true})) {
     if (inputFile.isDirectory()) {
-      await processDirectory(path.join(pathToDir, inputFile.name));
+      await processDirectory({
+        inputDir: path.join(inputDir, inputFile.name),
+        rootInputDir,
+        outputDir,
+        config,
+      });
       continue;
     }
 
     const ext = path.extname(inputFile.name);
 
     if (processable.has(ext) && !isTemplate(inputFile.name)) {
-      await processFile(pathToDir, inputFile);
+      await processFile({
+        inputDir,
+        inputFile,
+        rootInputDir,
+        outputDir,
+        config,
+      });
     } else {
-      await copyFile(pathToDir, inputFile);
+      await copyFile({
+        inputDir,
+        inputFile,
+        rootInputDir,
+        outputDir,
+        config,
+      });
     }
   }
 }
 
-await processDirectory(inputDir);
+await processDirectory({
+  inputDir,
+  rootInputDir: inputDir,
+  outputDir,
+  config,
+});

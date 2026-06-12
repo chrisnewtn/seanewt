@@ -23,8 +23,10 @@ export default function applyPageScript({
   return async tree => {
     const fileToScriptKey = path.relative(rootInputDir, pathToFile);
 
-    if (fileToScript.has(fileToScriptKey)) {
-      await fileToScript.get(fileToScriptKey)({
+    const pageScript = fileToScript.get(fileToScriptKey);
+
+    if (typeof pageScript === 'function') {
+      await pageScript({
         pathToFile,
         fileCache,
         tree

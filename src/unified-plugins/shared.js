@@ -35,12 +35,29 @@ function isNode(node) {
 }
 
 /**
+ * Returns `true` if the passed `node` is an {@link Parent}.
+ * @param {unknown} node The node to test.
+ * @returns {node is Parent}
+ */
+export function isParent(node) {
+  /**
+   * @type {any} We have to really mess about here to be allowed to test the
+   * `children` property.
+   */
+  const withChildren = isNode(node)
+    && Object.hasOwn(node, 'children')
+    && node;
+  return withChildren
+    && Array.isArray(withChildren.children);
+}
+
+/**
  * Returns `true` if the passed `node` is an {@link Element}.
  * @param {Node} node The node to test.
  * @returns {node is Element}
  */
 export function isElement(node) {
-  return isNode(node) && node.type === 'element';
+  return isParent(node) && node.type === 'element';
 }
 
 /**
