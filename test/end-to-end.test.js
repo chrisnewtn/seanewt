@@ -240,6 +240,42 @@ describe('end-to-end', () => {
       });
     }
 
+    if (file === 'posts/2026-06-11-example.html') {
+      it('captions the image', async () => {
+        const tree = await parseDoc(file);
+        const node = select('figure figcaption', tree);
+
+        assert.ok(node);
+        assert.equal(toText(node), 'How relaxing.');
+      });
+
+      it('copies the original with a hashed filename', async () => {
+        const tree = await parseDoc(file);
+        const node = select('figure img', tree);
+
+        assert.ok(node);
+        assert.equal(node.properties.src, '../images/flower-7296144.jpg');
+      });
+
+      it('explicitly sets width and height properties', async () => {
+        const tree = await parseDoc(file);
+        const node = select('figure img', tree);
+
+        assert.ok(node);
+        assert.equal(node.properties.width, 282);
+        assert.equal(node.properties.height, 501);
+      });
+
+      it('makes avif and webp alternatives available', async () => {
+        const tree = await parseDoc(file);
+        const nodes = selectAll('figure source', tree);
+
+        assert.equal(nodes.length, 2, 'Expected two nodes.');
+        assert.equal(nodes[0].properties.srcSet, '../images/flower-7296144-671e40f.avif');
+        assert.equal(nodes[1].properties.srcSet, '../images/flower-7296144-9c24709.webp');
+      });
+    }
+
     if (emojis[file]) {
       it('sets the post\'s emoji on article[data-emoji]', async () => {
         const tree = await parseDoc(file);
