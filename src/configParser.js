@@ -1,4 +1,5 @@
 import Ajv from 'ajv/dist/2020.js';
+import addFormats from 'ajv-formats';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -20,6 +21,7 @@ const configSchema = JSON.parse(await readFile(path.join(
 ), 'utf8'));
 
 const ajv = new Ajv();
+addFormats(ajv);
 const validate = ajv.compile(configSchema);
 
 /**
