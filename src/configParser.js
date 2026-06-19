@@ -6,6 +6,7 @@ import path from 'node:path';
 /**
  * @typedef {Object} Config
  * @property {number} [copyrightStart] The year the copyright of the content starts from e.g. 2024
+ * @property {string} [githubUrl] The URL of the repo on GitHub.
  */
 
 /** @type {Config} */
