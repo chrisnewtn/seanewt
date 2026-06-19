@@ -6,6 +6,11 @@
     "copyrightStart": {
       "description": "The year the copyright of the content starts from e.g. 2024",
       "type": "integer"
+    },
+    "githubUrl": {
+      "description": "The URL of the repo on GitHub.",
+      "type": "string",
+      "format": "uri"
     }
   }
 }

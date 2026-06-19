@@ -115,7 +115,7 @@ describe('end-to-end', () => {
       const node = select('#github-sha', tree);
 
       assert.ok(node);
-      assert.equal(node.properties.href, 'https://github.com/chrisnewtn/chrisnewtn.github.io/commit/c563c43109733cd71e65ac2b0735a88a6e0a89e3');
+      assert.equal(node.properties.href, 'https://github.com/chrisnewtn/example/commit/c563c43109733cd71e65ac2b0735a88a6e0a89e3');
       assert.equal(toText(node), 'c563c43');
     });
 

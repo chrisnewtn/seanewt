@@ -85,7 +85,10 @@ export async function processDocument({
     .use(applyCopyrightDate, {
       startYear: config.copyrightStart,
     })
-    .use(applyGitHubSha)
+    .use(applyGitHubSha, {
+      githubSha: process.env.GITHUB_SHA,
+      githubUrl: config.githubUrl,
+    })
     .use(rehypeFormat, {
       indentInitial: false,
     })

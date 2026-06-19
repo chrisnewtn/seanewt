@@ -1,4 +1,5 @@
 {
   "$schema": "../../schemas/config-schema.json",
-  "copyrightStart": 2020
+  "copyrightStart": 2020,
+  "githubUrl": "https://github.com/chrisnewtn/example"
 }
