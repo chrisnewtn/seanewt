@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Seanewt Configuration",
   "description": "The configuration schema for Seanewt.",
+  "type": "object",
   "properties": {
     "copyrightStart": {
       "description": "The year the copyright of the content starts from e.g. 2024",
